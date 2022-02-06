@@ -3,9 +3,38 @@ import clang "../odin-clang"
 
 import "core:strings"
 import "core:slice"
+import "core:fmt"
+import "core:os"
+import "core:runtime"
+
+cursor_kind_name :: proc (kind: clang.CXCursorKind) -> string {
+    spelling := clang.getCursorKindSpelling(kind)
+    defer clang.disposeString(spelling)
+
+    return string(clang.getCString(spelling))
+}
+
+visitor :: proc "c" (
+    cursor: clang.CXCursor,
+    parent: clang.CXCursor,
+    client_data: clang.CXClientData,
+) -> clang.CXChildVisitResult {
+    c := runtime.default_context()
+    c.allocator = cast(runtime.Allocator) client_data
+    context = c
+
+    name := cursor_kind_name(cursor.kind)
+    defer free(name)
+
+    fmt.println(name)
+
+    return clang.CXChildVisitResult.CXChildVisit_Continue;
+}
 
 main :: proc() {
     idx := clang.createIndex(0, 1);
+    defer clang.disposeIndex(idx)
+
     content: cstring = "#include \"Python.h\""
     file := clang.CXUnsavedFile {
         Filename = "test.c",
@@ -28,6 +57,7 @@ main :: proc() {
     }
 
     tu := clang.CXTranslationUnit{}
+    defer clang.disposeTranslationUnit(tu)
 
     err := clang.parseTranslationUnit2(
         idx,
@@ -39,4 +69,14 @@ main :: proc() {
         options,
         &tu,
     );
+
+    if err != nil {
+        fmt.println(err)
+    }
+    if tu == nil {
+        fmt.println("Failed to configure translation unit")
+        os.exit(1)
+    }
+    cursor := clang.getTranslationUnitCursor(tu)
+    clang.visitChildren(cursor, visitor, context.allocator)
 }
