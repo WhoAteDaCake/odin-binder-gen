@@ -9,7 +9,7 @@ import "core:runtime"
 
 cursor_kind_name :: proc (kind: clang.CXCursorKind) -> string {
     spelling := clang.getCursorKindSpelling(kind)
-    defer clang.disposeString(spelling)
+    // defer clang.disposeString(spelling)
 
     return string(clang.getCString(spelling))
 }
@@ -20,11 +20,12 @@ visitor :: proc "c" (
     client_data: clang.CXClientData,
 ) -> clang.CXChildVisitResult {
     c := runtime.default_context()
-    c.allocator = cast(runtime.Allocator) client_data
+    allocator := cast(^runtime.Allocator) client_data
+    c.allocator = allocator^
     context = c
 
     name := cursor_kind_name(cursor.kind)
-    defer free(name)
+    // defer delete(name)
 
     fmt.println(name)
 
@@ -78,5 +79,6 @@ main :: proc() {
         os.exit(1)
     }
     cursor := clang.getTranslationUnitCursor(tu)
-    clang.visitChildren(cursor, visitor, context.allocator)
+    allocator := context.allocator
+    clang.visitChildren(cursor, visitor, &allocator)
 }
