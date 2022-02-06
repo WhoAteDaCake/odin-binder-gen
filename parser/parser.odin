@@ -36,7 +36,7 @@ main :: proc() {
     idx := clang.createIndex(0, 1);
     defer clang.disposeIndex(idx)
 
-    content: cstring = "#include \"Python.h\""
+    content: cstring = "#include \"test/headers.h\""
     file := clang.CXUnsavedFile {
         Filename = "test.c",
         Contents = content,
