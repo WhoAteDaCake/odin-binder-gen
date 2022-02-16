@@ -7,32 +7,97 @@ import "core:fmt"
 import "core:os"
 import "core:runtime"
 
-cursor_kind_name :: proc (kind: clang.CXCursorKind) -> string {
-    spelling := clang.getCursorKindSpelling(kind)
-    // defer clang.disposeString(spelling)
+import "../types"
 
-    return string(clang.getCString(spelling))
+// ParserContext :: struct {
+//     allocator: ^runtime.Allocator,
+//     types: [dynamic]^types.Type,
+// }
+
+
+// cached_cursors := make(map[u32]^types.Type);
+
+// build_function_type :: proc(t: clang.CXType) -> types.Func {
+//     output := types.Func{}
+//     // fmt.println(type_spelling(t))
+//     // TODO: restrict to FunctionProto, FunctionNoProto
+//     output.ret = type_(clang.getResultType(t))
+//     n := cast(u32) clang.getNumArgTypes(t)
+//     output.params = make([]^types.Type, n)
+//     for i in 0..(n - 1) {
+//         at := clang.getArgType(t, i)
+//         // print()
+//         cursor := clang.getTypeDeclaration(t)
+//         fmt.println(cursor_spelling(cursor))
+//         output.params[i] = type_(at)
+//     }
+//     return output
+// }
+
+// build_ptr_type :: proc(t: clang.CXType) -> types.Pointer {
+//     return types.Pointer{type_(clang.getPointeeType(t))}
+// }
+
+type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
+    output := new(types.Type)
+    // fmt.println(type_spelling(t))
+    // output.name = 
+    #partial switch t.kind {
+        // case .CXType_FunctionProto: {
+        //     output.variant = build_function_type(t)
+        // }
+        // Check if I need to handle special case for function pointers
+        case .CXType_Pointer: {
+            // output.variant = build_ptr_type(t)
+        }
+        case .CXType_Void: {
+            output.variant = types.Primitive{types.Primitive_Kind.void}
+        }
+        case .CXType_Char_S: {
+            output.variant = types.Primitive{types.Primitive_Kind.schar}
+        }
+        case .CXType_Int: {
+            output.variant = types.Primitive{types.Primitive_Kind.int}
+        }
+        case .CXType_Elaborated: {
+            // cursor := clang.getTypeDeclaration(t)
+            // // Free previous data
+            // found := cached_cursors[clang.hashCursor(cursor)]
+            // output.variant = types.Node_Ref{found}
+        }
+        case: fmt.println(t.kind)
+    }
+    return output
 }
 
-visitor :: proc "c" (
-    cursor: clang.CXCursor,
-    parent: clang.CXCursor,
-    client_data: clang.CXClientData,
-) -> clang.CXChildVisitResult {
-    c := runtime.default_context()
-    allocator := cast(^runtime.Allocator) client_data
-    c.allocator = allocator^
-    context = c
+// visit_typedef :: proc(cursor: clang.CXCursor) -> types.Typedef {
+//     t := clang.getTypedefDeclUnderlyingType(cursor)
+//     base := type_(t)
+//     name := type_spelling(t)
+//     cached_cursors[clang.hashCursor(cursor)] = base
+//     return types.Typedef{name,base}
+// }
 
-    name := cursor_kind_name(cursor.kind)
-    // defer delete(name)
+visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
 
-    fmt.println(name)
-
-    return clang.CXChildVisitResult.CXChildVisit_Continue;
 }
 
-main :: proc() {
+visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
+    output := new(types.Type)
+    // fmt.println(cursor_spelling(cursor))
+    output.name = spelling(cursor)
+    // fmt.println(output.name)
+    #partial switch cursor.kind {
+        case .CXCursor_FunctionDecl: 
+            output.variant = visit_function_decl(s, cursor)
+        // case .CXCursor_TypedefDecl: {
+        //     output.variant = visit_typedef(cursor)
+        // }
+    }
+    return output
+}
+
+parse :: proc() -> []^types.Type {
     idx := clang.createIndex(0, 1);
     defer clang.disposeIndex(idx)
 
@@ -79,6 +144,30 @@ main :: proc() {
         os.exit(1)
     }
     cursor := clang.getTranslationUnitCursor(tu)
-    allocator := context.allocator
-    clang.visitChildren(cursor, visitor, &allocator)
+    // TODO:
+    // remove this later if everything works as expected
+    
+    default_allocator: = context.allocator
+    state := make_state(&default_allocator)
+
+    clang.visitChildren(cursor, proc "c" (
+        cursor: clang.CXCursor,
+        parent: clang.CXCursor,
+        client_data: clang.CXClientData,
+    ) -> clang.CXChildVisitResult {
+
+        state := (^State)(client_data)
+        context = runtime.default_context()
+        context.allocator = state.allocator^
+        
+        visit(cursor)
+    
+        return clang.CXChildVisitResult.CXChildVisit_Continue;
+    }, state)
+    
+    // for value in state.test {
+    //     fmt.println(value)
+    // }
+
+    return state.declared[:]
 }
