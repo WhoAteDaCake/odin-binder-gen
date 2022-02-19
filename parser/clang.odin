@@ -34,3 +34,13 @@ visit_children :: proc(
         return w_state.action(w_state.state, cursor)
     }, &wrapped)
 }
+
+cursor_header :: proc(cursor: clang.CXCursor) -> string {
+    // Only used as a way to initiate file item
+    // this could be swapped
+    file := clang.getIncludedFile(cursor)
+    location := clang.getCursorLocation(cursor)
+    clang.getFileLocation(location, &file, nil, nil, nil)
+
+    return string(clang.getCString(clang.getFileName(file)))
+}

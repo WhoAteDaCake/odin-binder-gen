@@ -6,4 +6,8 @@
 //   cookie_read_function_t *read;
 // } cookie_io_functions_t;
 
+// #include "python3.8/Python.h"
+
 #include "deps/buffer/buffer.h"
+
+typedef int cookie_read_function_t(void *__cookie, char *__buf, int __nbytes);

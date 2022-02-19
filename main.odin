@@ -5,7 +5,9 @@ import "./layout"
 import "./printer"
 
 main :: proc () {
-    entries := parser.parse()
+    config := parser.Config{[]string{"deps/buffer"}}
+
+    entries := parser.parse(&config)
     defer delete(entries)
     state := layout.resolve(entries)
     printer.run(state)

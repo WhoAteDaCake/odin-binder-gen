@@ -32,9 +32,9 @@ pointer_to_s :: proc(v: types.Pointer) -> string {
     if strings.compare(t, "rawptr") == 0 {
         return t
     }
-    if strings.compare(t, "_c.char") == 0 {
-        return "cstring"
-    }
+    // if strings.compare(t, "_c.char") == 0 {
+    //     return "cstring"
+    // }
     return fmt.aprintf("^%s", type_to_s(v.base))  
 }
 

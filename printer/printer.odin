@@ -44,7 +44,7 @@ print :: proc(s: ^State, t: ^types.Type, variant: types.TypeVariant) {
         case types.Func:
             print_func_decl(s, t, v)
         case:
-            fmt.println("Unexpected type received", v)
+            // fmt.println("Unexpected type received", v)
     }
 }
 

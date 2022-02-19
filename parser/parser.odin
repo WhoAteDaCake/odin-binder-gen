@@ -59,7 +59,7 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             // found := cached_cursors[clang.hashCursor(cursor)]
             // output.variant = types.Node_Ref{found}
         }
-        case: fmt.println(t.kind)
+        // case: fmt.println(t.kind)
     }
     return output
 }
@@ -120,7 +120,7 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     return output
 }
 
-parse :: proc() -> [dynamic]^types.Type {
+parse :: proc(config: ^Config) -> [dynamic]^types.Type {
     idx := clang.createIndex(0, 1);
     defer clang.disposeIndex(idx)
 
@@ -167,11 +167,9 @@ parse :: proc() -> [dynamic]^types.Type {
         os.exit(1)
     }
     cursor := clang.getTranslationUnitCursor(tu)
-    // TODO:
-    // remove this later if everything works as expected
     
     default_allocator: = context.allocator
-    state := make_state(&default_allocator)
+    state := make_state(config, &default_allocator)
     defer delete(state.cached)
     defer delete(state.pending)
 
@@ -179,7 +177,17 @@ parse :: proc() -> [dynamic]^types.Type {
         state,
         cursor,
         proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {    
-            append(&s.declared, visit(s, cursor))
+            header := cursor_header(cursor)
+            matched := false
+            for allowed in s.config.allowed_headers {
+                if strings.contains(header, allowed) {
+                    matched = true
+                    break
+                }
+            }
+            if matched {
+                append(&s.declared, visit(s, cursor))
+            }
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
     )
