@@ -1,81 +1,33 @@
 package types
 
-Primitive_Flag :: enum
-{
-    Integer,
-    Unsigned,
-    Float,
-}
-Primitive_Flags :: bit_set[Primitive_Flag];
-
-Primitive_Kind :: enum
-{
-    void,
-    
-    char,
-    
-    schar,
-    short,
-    int,
-    long,
-    longlong,
-    
-    uchar,
-    ushort,
-    uint,
-    ulong,
-    ulonglong,
-    
-    float,
-    double,
-    longdouble,
-    
-    i8,
-    i16,
-    i32,
-    i64,
-    
-    u8,
-    u16,
-    u32,
-    u64,
-    
-    wchar_t,
-    size_t,
-    ssize_t,
-    ptrdiff_t,
-    uintptr_t,
-    intptr_t,
+TypeVariant :: union{
+    Invalid,
+    Primitive,
+    Typedef,
+    Pointer,
+    Array,
+    Func,
+    Struct,
+    Union,
+    Va_Arg,
+    Node_Ref,
+    FieldDecl,
 }
 
 Type :: struct
 {
     name: string,
-    variant: union
-    {
-        Invalid,
-        Primitive,
-        Typedef,
-        Pointer,
-        Array,
-        Func,
-        Struct,
-        Union,
-        // Bitfield,
-        Va_Arg,
-        Node_Ref,
-        FieldDecl,
-    },
+    variant: TypeVariant,
 }
 
 Va_Arg :: struct {}
 
-Invalid :: struct{};
+Invalid :: struct{}
 
 Primitive :: struct
 {
-    kind: Primitive_Kind,
-    // flags: Primitive_Flags,
+    type_: string,
+    ctype: bool,
 }
 
 Node_Ref :: struct {
@@ -120,3 +72,13 @@ Array :: struct
     base: ^Type,
     size: i64,
 }
+
+primitive_by_name :: proc(name: string) -> Primitive {
+    return Primitive{name, true,}
+}
+
+primitive_by_name_c_type :: proc(name: string, ctype: bool) -> Primitive {
+    return Primitive{name, ctype,}
+}
+
+primitive :: proc{primitive_by_name, primitive_by_name_c_type}

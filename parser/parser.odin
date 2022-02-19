@@ -45,13 +45,13 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             output.variant = build_ptr_type(s, t)
         }
         case .CXType_Void: {
-            output.variant = types.Primitive{types.Primitive_Kind.void}
+            output.variant = types.primitive("rawptr", false)
         }
         case .CXType_Char_S: {
-            output.variant = types.Primitive{types.Primitive_Kind.schar}
+            output.variant = types.primitive("schar")
         }
         case .CXType_Int: {
-            output.variant = types.Primitive{types.Primitive_Kind.int}
+            output.variant = types.primitive("int")
         }
         case .CXType_Elaborated: {
             // cursor := clang.getTypeDeclaration(t)
@@ -120,7 +120,7 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     return output
 }
 
-parse :: proc() -> []^types.Type {
+parse :: proc() -> [dynamic]^types.Type {
     idx := clang.createIndex(0, 1);
     defer clang.disposeIndex(idx)
 
@@ -185,5 +185,5 @@ parse :: proc() -> []^types.Type {
     )
 
 
-    return state.declared[:]
+    return state.declared
 }

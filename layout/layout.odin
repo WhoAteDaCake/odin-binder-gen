@@ -7,8 +7,12 @@ State :: struct {
     fns: [dynamic]^types.Type,
 }
 
-resolve :: proc(entries: [dynamic]^types.Type) -> state {
-    state := State{}
+resolve :: proc(entries: [dynamic]^types.Type) -> State {
+    state := State{make([dynamic]^types.Type), make([dynamic]^types.Type)}
+
+    for entry in entries {
+        append(&state.fns, entry)
+    }
 
     return state
 }
