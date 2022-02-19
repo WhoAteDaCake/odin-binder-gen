@@ -80,22 +80,15 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
     s.pending = make([dynamic]^types.Type)
 
     // Parse internal arguments
-    // TODO: can a wrapper be used here?
-    // since I'll use it for structs + main parser
-    clang.visitChildren(cursor, proc "c" (
-        cursor: clang.CXCursor,
-        parent: clang.CXCursor,
-        client_data: clang.CXClientData,
-    ) -> clang.CXChildVisitResult {
+    visit_children(
+        s,
+        cursor,
+        proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {    
+            append(&s.pending, visit(s, cursor))
+            return clang.CXChildVisitResult.CXChildVisit_Continue;
+        },
+    )
 
-        state := (^State)(client_data)
-        context = runtime.default_context()
-        context.allocator = state.allocator^
-
-        append(&state.pending, visit(state, cursor))
-    
-        return clang.CXChildVisitResult.CXChildVisit_Continue;
-    }, s)
     // Swap back to old data
     params := s.pending
     s.pending = pending
@@ -181,24 +174,13 @@ parse :: proc() -> []^types.Type {
     default_allocator: = context.allocator
     state := make_state(&default_allocator)
 
-    clang.visitChildren(cursor, proc "c" (
-        cursor: clang.CXCursor,
-        parent: clang.CXCursor,
-        client_data: clang.CXClientData,
-    ) -> clang.CXChildVisitResult {
-
-        state := (^State)(client_data)
-        context = runtime.default_context()
-        context.allocator = state.allocator^
-        
-        visit(state, cursor)
-    
-        return clang.CXChildVisitResult.CXChildVisit_Continue;
-    }, state)
-    
-    // for value in state.test {
-    //     fmt.println(value)
-    // }
-
+    visit_children(
+        state,
+        cursor,
+        proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {    
+            append(&s.declared, visit(s, cursor))
+            return clang.CXChildVisitResult.CXChildVisit_Continue;
+        },
+    )
     return state.declared[:]
 }
