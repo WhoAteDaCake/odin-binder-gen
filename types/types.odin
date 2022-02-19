@@ -90,6 +90,7 @@ Typedef :: struct
 
 Func :: struct
 {
+    variadic: bool,
     ret: ^Type,
     params: []^Type,
 }

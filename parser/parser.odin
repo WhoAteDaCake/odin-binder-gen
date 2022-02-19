@@ -9,12 +9,6 @@ import "core:runtime"
 
 import "../types"
 
-// ParserContext :: struct {
-//     allocator: ^runtime.Allocator,
-//     types: [dynamic]^types.Type,
-// }
-
-
 // cached_cursors := make(map[u32]^types.Type);
 
 // build_function_type :: proc(t: clang.CXType) -> types.Func {
@@ -34,21 +28,21 @@ import "../types"
 //     return output
 // }
 
-// build_ptr_type :: proc(t: clang.CXType) -> types.Pointer {
-//     return types.Pointer{type_(clang.getPointeeType(t))}
-// }
+build_ptr_type :: proc(s: ^State, t: clang.CXType) -> types.Pointer {
+    return types.Pointer{type_(s, clang.getPointeeType(t))}
+}
 
 type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
     output := new(types.Type)
-    // fmt.println(type_spelling(t))
-    // output.name = 
+    // fmt.println(spelling(t.kind))
+
     #partial switch t.kind {
         // case .CXType_FunctionProto: {
         //     output.variant = build_function_type(t)
         // }
         // Check if I need to handle special case for function pointers
         case .CXType_Pointer: {
-            // output.variant = build_ptr_type(t)
+            output.variant = build_ptr_type(s, t)
         }
         case .CXType_Void: {
             output.variant = types.Primitive{types.Primitive_Kind.void}
@@ -79,17 +73,54 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
 // }
 
 visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
+    ret := type_(s, clang.getCursorResultType(cursor))
+    variadic := clang.Cursor_isVariadic(cursor) == 1
+    
+    pending := s.pending
+    s.pending = make([dynamic]^types.Type)
 
+    // Parse internal arguments
+    // TODO: can a wrapper be used here?
+    // since I'll use it for structs + main parser
+    clang.visitChildren(cursor, proc "c" (
+        cursor: clang.CXCursor,
+        parent: clang.CXCursor,
+        client_data: clang.CXClientData,
+    ) -> clang.CXChildVisitResult {
+
+        state := (^State)(client_data)
+        context = runtime.default_context()
+        context.allocator = state.allocator^
+
+        append(&state.pending, visit(state, cursor))
+    
+        return clang.CXChildVisitResult.CXChildVisit_Continue;
+    }, s)
+    // Swap back to old data
+    params := s.pending
+    s.pending = pending
+
+    return types.Func{variadic,ret,params[:]}
 }
+
+visit_param_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
+   return types.FieldDecl{
+       spelling(cursor), 
+       type_(s, clang.getCursorType(cursor)),
+    } 
+}
+
 
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new(types.Type)
-    // fmt.println(cursor_spelling(cursor))
+    fmt.println(spelling(cursor.kind))
     output.name = spelling(cursor)
     // fmt.println(output.name)
     #partial switch cursor.kind {
         case .CXCursor_FunctionDecl: 
             output.variant = visit_function_decl(s, cursor)
+        case .CXCursor_ParmDecl:
+            output.variant = visit_param_decl(s, cursor)
         // case .CXCursor_TypedefDecl: {
         //     output.variant = visit_typedef(cursor)
         // }
@@ -160,7 +191,7 @@ parse :: proc() -> []^types.Type {
         context = runtime.default_context()
         context.allocator = state.allocator^
         
-        visit(cursor)
+        visit(state, cursor)
     
         return clang.CXChildVisitResult.CXChildVisit_Continue;
     }, state)
