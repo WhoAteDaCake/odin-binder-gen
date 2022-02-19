@@ -6,4 +6,4 @@
 //   cookie_read_function_t *read;
 // } cookie_io_functions_t;
 
-int cookie_read_function_t(void *__cookie, char *__buf, int __nbytes);
+#include "deps/buffer/buffer.h"

@@ -27,9 +27,13 @@ primitive_to_s :: proc(v: types.Primitive) -> string {
 }
 
 pointer_to_s :: proc(v: types.Pointer) -> string {
+    // Could these be done within layout module?
     t := type_to_s(v.base)
     if strings.compare(t, "rawptr") == 0 {
         return t
+    }
+    if strings.compare(t, "_c.char") == 0 {
+        return "cstring"
     }
     return fmt.aprintf("^%s", type_to_s(v.base))  
 }

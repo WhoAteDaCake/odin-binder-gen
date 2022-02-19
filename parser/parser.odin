@@ -48,7 +48,7 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             output.variant = types.primitive("rawptr", false)
         }
         case .CXType_Char_S: {
-            output.variant = types.primitive("schar")
+            output.variant = types.primitive("char")
         }
         case .CXType_Int: {
             output.variant = types.primitive("int")
@@ -131,7 +131,7 @@ parse :: proc() -> [dynamic]^types.Type {
         Length = auto_cast len(content),
     }
     files := []clang.CXUnsavedFile{file}
-    raw_flags := "-I/usr/include/python3.8 -I/usr/include/python3.8  -Wno-unused-result -Wsign-compare -g -fdebug-prefix-map=/build/python3.8-4OrTnN/python3.8-3.8.10=. -specs=/usr/share/dpkg/no-pie-compile.specs -fstack-protector -Wformat -Werror=format-security  -DNDEBUG -g -fwrapv -O3 -Wall -lcrypt -lpthread -ldl  -lutil -lm -lm"
+    raw_flags := "-I. -I/usr/include/python3.8 -I/usr/include/python3.8  -Wno-unused-result -Wsign-compare -g -fdebug-prefix-map=/build/python3.8-4OrTnN/python3.8-3.8.10=. -specs=/usr/share/dpkg/no-pie-compile.specs -fstack-protector -Wformat -Werror=format-security  -DNDEBUG -g -fwrapv -O3 -Wall -lcrypt -lpthread -ldl  -lutil -lm -lm"
 
     options := clang.defaultEditingTranslationUnitOptions()
 
