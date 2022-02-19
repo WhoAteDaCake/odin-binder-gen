@@ -1,10 +1,11 @@
 package main
 
 import "./parser"
-// import "./layout"
+import "./layout"
 
 main :: proc () {
     entries := parser.parse()
-    // layout.resolve(entries) 
+    defer delete(entries)
+    layout.resolve(entries) 
 }
 

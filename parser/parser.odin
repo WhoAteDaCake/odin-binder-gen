@@ -103,10 +103,9 @@ visit_param_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
     } 
 }
 
-
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new(types.Type)
-    fmt.println(spelling(cursor.kind))
+    // fmt.println(spelling(cursor.kind))
     output.name = spelling(cursor)
     // fmt.println(output.name)
     #partial switch cursor.kind {
@@ -173,6 +172,8 @@ parse :: proc() -> []^types.Type {
     
     default_allocator: = context.allocator
     state := make_state(&default_allocator)
+    defer delete(state.cached)
+    defer delete(state.pending)
 
     visit_children(
         state,
@@ -182,5 +183,7 @@ parse :: proc() -> []^types.Type {
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
     )
+
+
     return state.declared[:]
 }
