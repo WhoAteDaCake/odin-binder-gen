@@ -66,9 +66,7 @@ run :: proc (c: ^config.Config, layout_state: layout.State) {
     state := State{&buffer}
     print_setup(c, &state)
     
-    // Can stop passing curly bracked as string once
-    // https://github.com/odin-lang/Odin/issues/1523 is resolved
-    pprintf(&state, "foreign %s %s\n", c.library, "{")
+    pprintf(&state, "foreign %s {{\n", c.library)
     // strings.write_string(&buffer, "foreign  {\n");
 
     for item in layout_state.fns {
