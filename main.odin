@@ -4,17 +4,18 @@ import "./parser"
 import "./layout"
 import "./printer"
 import "./config"
+import "./state"
 
 main :: proc () {
     cfg := config.Config{
-        []string{"deps/buffer"},
+        []string{"deps/buffer", "test/headers"},
         "deps/buffer/buffer.so",
         "buffer",
     }
 
-    entries := parser.parse(&cfg)
-    defer delete(entries)
-    state := layout.resolve(entries)
-    printer.run(&cfg, state)
+    p_state := parser.parse(&cfg)
+    // defer delete(entries)
+    // state := layout.resolve(entries)
+    // printer.run(&cfg, state)
 }
 

@@ -9,19 +9,21 @@ import "core:runtime"
 
 import "../config"
 import "../types"
+import "../state"
 
-// cached_cursors := make(map[u32]^types.Type);
+State :: state.ParserState
 
 new_type :: proc(s: ^State) -> ^types.Type {
     t := new(types.Type)
     t.id = s.id + 1
     s.id += 1
+    s.registered[t.id] = t
     return t
 }
 
 type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
     output := new_type(s)
-    fmt.println(t.kind, spelling(t))
+    // fmt.println(t.kind, spelling(t))
     output.name = spelling(t)
 
     #partial switch t.kind {
@@ -50,28 +52,27 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
                 output.variant = types.primitive(output.name)
             } else {
                 // This will probablybe typedefs within a struct
-                fmt.println("UNEXPECTED")
+                // fmt.println("UNEXPECTED")
             }
-            // fmt.println(t)
+            // // fmt.println(t)
         }
         case .CXType_Elaborated: {
-            // cursor := clang.getTypeDeclaration(t)
-            // // Free previous ik][data
-            // found := cached_cursors[clang.hashCursor(cursor)]
-            // output.variant = types.Node_Ref{found}
+            cursor := clang.getTypeDeclaration(t)
+            found := s.cached[clang.hashCursor(cursor)]
+            output.variant = types.Node_Ref{found}
         }
-        // case: fmt.println(t.kind)
+        // case: // fmt.println(t.kind)
     }
     return output
 }
 
-// visit_typedef :: proc(cursor: clang.CXCursor) -> types.Typedef {
-//     t := clang.getTypedefDeclUnderlyingType(cursor)
-//     base := type_(t)
-//     name := type_spelling(t)
-//     cached_cursors[clang.hashCursor(cursor)] = base
-//     return types.Typedef{name,base}
-// }
+visit_typedef :: proc(s: ^State, cursor: clang.CXCursor) -> types.Typedef {
+    t := clang.getTypedefDeclUnderlyingType(cursor)
+    base := type_(s, t)
+    name := spelling(t)
+    s.cached[clang.hashCursor(cursor)] = base
+    return types.Typedef{name,base}
+}
 
 visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
     ret := type_(s, clang.getCursorResultType(cursor))
@@ -107,24 +108,43 @@ visit_param_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
     } 
 }
 
+visit_struct_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Struct {
+    pending := s.pending
+    s.pending = make([dynamic]^types.Type)
+    // Parse internal arguments
+    visit_children(
+        s,
+        cursor,
+        proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
+            append(&s.pending, visit(s, cursor))
+            return clang.CXChildVisitResult.CXChildVisit_Continue;
+        },
+    )
+    // Swap back to old data
+    ls := s.pending[:]
+    s.pending = pending
+    return types.Struct{ls}
+}
+
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
-    fmt.println(spelling(cursor))
+    // fmt.println(spelling(cursor))
     output.name = spelling(cursor)
-    // fmt.println(output.name)
+    // // fmt.println(output.name)
     #partial switch cursor.kind {
         case .CXCursor_FunctionDecl: 
             output.variant = visit_function_decl(s, cursor)
         case .CXCursor_ParmDecl:
             output.variant = visit_param_decl(s, cursor)
-        // case .CXCursor_TypedefDecl: {
-        //     output.variant = visit_typedef(cursor)
-        // }
+        case .CXCursor_TypedefDecl:
+            output.variant = visit_typedef(s, cursor)
+        case .CXCursor_StructDecl:
+            output.variant = visit_struct_decl(s, cursor)
     }
     return output
 }
 
-parse :: proc(c: ^config.Config) -> [dynamic]^types.Type {
+parse :: proc(c: ^config.Config) -> ^State {
     idx := clang.createIndex(0, 1);
     defer clang.disposeIndex(idx)
 
@@ -164,18 +184,19 @@ parse :: proc(c: ^config.Config) -> [dynamic]^types.Type {
     );
 
     if err != nil {
-        fmt.println(err)
+        // fmt.println(err)
     }
     if tu == nil {
-        fmt.println("Failed to configure translation unit")
+        // fmt.println("Failed to configure translation unit")
         os.exit(1)
     }
     cursor := clang.getTranslationUnitCursor(tu)
     
     default_allocator: = context.allocator
-    state := make_state(c, &default_allocator)
-    defer delete(state.cached)
-    defer delete(state.pending)
+    state := state.parser(c, &default_allocator)
+    // Should be done from state package
+    // defer delete(state.cached)
+    // defer delete(state.pending)
 
     visit_children(
         state,
@@ -198,5 +219,5 @@ parse :: proc(c: ^config.Config) -> [dynamic]^types.Type {
     )
 
 
-    return state.declared
+    return state
 }
