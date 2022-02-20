@@ -21,7 +21,11 @@ handle_struct :: proc(s: ^State, t: ^types.Type, v: types.Struct) {
 
 handle_typedef :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
     if strings.contains(t.name, "struct ") {
-        t.name = strings.remove(t.name, "struct ")
+        name, was_allocation := strings.remove(t.name, "struct ", 1)
+        if was_allocation {
+            delete(t.name)
+        }
+        t.name = name
     }
     append(&s.defs, t)
 }

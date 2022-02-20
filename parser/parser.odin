@@ -70,7 +70,6 @@ visit_typedef :: proc(s: ^State, cursor: clang.CXCursor) -> types.Typedef {
     t := clang.getTypedefDeclUnderlyingType(cursor)
     base := type_(s, t)
     name := spelling(t)
-    s.cached[clang.hashCursor(cursor)] = base
     return types.Typedef{name,base}
 }
 
@@ -142,8 +141,10 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
         case .CXCursor_ParmDecl:
             output.variant = visit_param_decl(s, cursor)
         case .CXCursor_TypedefDecl:
+            s.cached[clang.hashCursor(cursor)] = output
             output.variant = visit_typedef(s, cursor)
         case .CXCursor_StructDecl:
+            s.cached[clang.hashCursor(cursor)] = output
             output.variant = visit_struct_decl(s, cursor)
         case .CXCursor_FieldDecl:
             output.variant = visit_param_decl(s, cursor)
