@@ -12,30 +12,17 @@ import "../types"
 
 // cached_cursors := make(map[u32]^types.Type);
 
-// build_function_type :: proc(t: clang.CXType) -> types.Func {
-//     output := types.Func{}
-//     // fmt.println(type_spelling(t))
-//     // TODO: restrict to FunctionProto, FunctionNoProto
-//     output.ret = type_(clang.getResultType(t))
-//     n := cast(u32) clang.getNumArgTypes(t)
-//     output.params = make([]^types.Type, n)
-//     for i in 0..(n - 1) {
-//         at := clang.getArgType(t, i)
-//         // print()
-//         cursor := clang.getTypeDeclaration(t)
-//         fmt.println(cursor_spelling(cursor))
-//         output.params[i] = type_(at)
-//     }
-//     return output
-// }
-
-build_ptr_type :: proc(s: ^State, t: clang.CXType) -> types.Pointer {
-    return types.Pointer{type_(s, clang.getPointeeType(t))}
+new_type :: proc(s: ^State) -> ^types.Type {
+    t := new(types.Type)
+    t.id = s.id + 1
+    s.id += 1
+    return t
 }
 
 type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
-    output := new(types.Type)
-    // fmt.println(spelling(t.kind))
+    output := new_type(s)
+    fmt.println(t.kind, spelling(t))
+    output.name = spelling(t)
 
     #partial switch t.kind {
         // case .CXType_FunctionProto: {
@@ -43,7 +30,7 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         // }
         // Check if I need to handle special case for function pointers
         case .CXType_Pointer: {
-            output.variant = build_ptr_type(s, t)
+            output.variant = types.Pointer{type_(s, clang.getPointeeType(t))}
         }
         case .CXType_Void: {
             output.variant = types.primitive("rawptr", false)
@@ -54,9 +41,18 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         case .CXType_Int: {
             output.variant = types.primitive("int")
         }
+        case .CXType_Typedef: {
+            if types.is_builtin(output.name) {
+                output.variant = types.primitive(output.name)
+            } else {
+                // This will probablybe typedefs within a struct
+                fmt.println("UNEXPECTED")
+            }
+            // fmt.println(t)
+        }
         case .CXType_Elaborated: {
             // cursor := clang.getTypeDeclaration(t)
-            // // Free previous data
+            // // Free previous ik][data
             // found := cached_cursors[clang.hashCursor(cursor)]
             // output.variant = types.Node_Ref{found}
         }
@@ -84,8 +80,11 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
     visit_children(
         s,
         cursor,
-        proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {    
-            append(&s.pending, visit(s, cursor))
+        proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
+            // We don't care about other params here
+            if cursor.kind == clang.CXCursorKind.CXCursor_ParmDecl {
+                append(&s.pending, visit(s, cursor))
+            }
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
     )
@@ -105,8 +104,8 @@ visit_param_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
 }
 
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
-    output := new(types.Type)
-    // fmt.println(spelling(cursor.kind))
+    output := new_type(s)
+    fmt.println(spelling(cursor))
     output.name = spelling(cursor)
     // fmt.println(output.name)
     #partial switch cursor.kind {
@@ -179,6 +178,7 @@ parse :: proc(c: ^config.Config) -> [dynamic]^types.Type {
         cursor,
         proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {    
             header := cursor_header(cursor)
+            // Later this should be done in layout module instead?
             matched := false
             for allowed in s.config.allowed_headers {
                 if strings.contains(header, allowed) {

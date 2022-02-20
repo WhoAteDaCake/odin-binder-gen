@@ -34,6 +34,8 @@ print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
     param_l := strings.join(params, ",")
     defer delete(param_l)
 
+    // fmt.println(param_l, v.params)
+
     ret := type_to_s(v.ret)
     defer delete(ret)
 
@@ -65,7 +67,7 @@ run :: proc (c: ^config.Config, layout_state: layout.State) {
     }
     state := State{&buffer}
     print_setup(c, &state)
-    
+
     pprintf(&state, "foreign %s {{\n", c.library)
     // strings.write_string(&buffer, "foreign  {\n");
 

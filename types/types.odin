@@ -17,6 +17,7 @@ TypeVariant :: union{
 Type :: struct
 {
     name: string,
+    id: int,
     variant: TypeVariant,
 }
 
