@@ -9,10 +9,9 @@ import "core:strings"
 import "../layout"
 import "../types"
 import "../config"
+import "../state"
 
-State :: struct {
-    buffer: ^strings.Builder,
-}
+State :: state.PrinterState
 
 pprintf :: proc(using s: ^State, fmt_str: string, args: ..any)
 {
@@ -58,23 +57,20 @@ print_setup :: proc(c: ^config.Config, s: ^State) {
     // pprintf(s, "import _c \"core:c\"\n\n")
 }
 
-run :: proc (c: ^config.Config, layout_state: layout.State) {
-    buffer := strings.make_builder()
-    defer 
-    {
-        os.write_entire_file("./dist/output.odin", transmute([]byte)strings.to_string(buffer));
-        strings.destroy_builder(&buffer);
-    }
-    state := State{&buffer}
-    print_setup(c, &state)
+run :: proc (
+    c: ^config.Config,
+    l_state: ^state.LayoutState,
+    s: ^State,
+) {
+    print_setup(c, s)
 
-    pprintf(&state, "foreign %s {{\n", c.library)
+    pprintf(s, "foreign %s {{\n", c.library)
     // strings.write_string(&buffer, "foreign  {\n");
 
-    for item in layout_state.fns {
-        print(&state, item, item.variant)
+    for item in l_state.fns {
+        print(s, item, item.variant)
     }
 
-    strings.write_string(&buffer, "}");
+    strings.write_string(s.buffer, "}");
 }
 

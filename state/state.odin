@@ -1,6 +1,7 @@
 package state
 
 import "core:runtime"
+import "core:strings"
 import "../types"
 import "../config"
 
@@ -38,5 +39,15 @@ layout :: proc() -> ^LayoutState {
     s.defs = make([dynamic]^types.Type)
     s.fns = make([dynamic]^types.Type)
     s.id = 0
+    return s
+}
+
+PrinterState :: struct {
+    buffer: ^strings.Builder,
+}
+
+printer :: proc(buffer: ^strings.Builder) -> ^PrinterState {
+    s := new(PrinterState)
+    s.buffer = buffer
     return s
 }
