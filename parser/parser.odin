@@ -126,6 +126,11 @@ visit_struct_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Struct {
     return types.Struct{ls}
 }
 
+// visit_field_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
+//     name := spelling(cursor)
+
+// } 
+
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
     // fmt.println(spelling(cursor))
@@ -140,6 +145,8 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
             output.variant = visit_typedef(s, cursor)
         case .CXCursor_StructDecl:
             output.variant = visit_struct_decl(s, cursor)
+        case .CXCursor_FieldDecl:
+            output.variant = visit_param_decl(s, cursor)
     }
     return output
 }

@@ -15,7 +15,7 @@ main :: proc () {
 
     p_state := parser.parse(&cfg)
     // defer delete(entries)
-    // state := layout.resolve(entries)
+    l_state := layout.resolve(p_state)
     // printer.run(&cfg, state)
 }
 

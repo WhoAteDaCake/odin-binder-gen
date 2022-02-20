@@ -26,3 +26,17 @@ parser :: proc(c: ^config.Config, allocator: ^runtime.Allocator) -> ^ParserState
     s.id = 0
     return s
 }
+
+LayoutState :: struct {
+    defs: [dynamic]^types.Type,
+    fns: [dynamic]^types.Type,
+    id: uint,
+}
+
+layout :: proc() -> ^LayoutState {
+    s := new(LayoutState)
+    s.defs = make([dynamic]^types.Type)
+    s.fns = make([dynamic]^types.Type)
+    s.id = 0
+    return s
+}
