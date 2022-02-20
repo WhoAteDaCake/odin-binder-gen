@@ -3,13 +3,18 @@ package main
 import "./parser"
 import "./layout"
 import "./printer"
+import "./config"
 
 main :: proc () {
-    config := parser.Config{[]string{"deps/buffer"}}
+    cfg := config.Config{
+        []string{"deps/buffer"},
+        "deps/buffer/buffer.so",
+        "buffer",
+    }
 
-    entries := parser.parse(&config)
+    entries := parser.parse(&cfg)
     defer delete(entries)
     state := layout.resolve(entries)
-    printer.run(state)
+    printer.run(&cfg, state)
 }
 

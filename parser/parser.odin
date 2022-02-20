@@ -7,6 +7,7 @@ import "core:fmt"
 import "core:os"
 import "core:runtime"
 
+import "../config"
 import "../types"
 
 // cached_cursors := make(map[u32]^types.Type);
@@ -120,7 +121,7 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     return output
 }
 
-parse :: proc(config: ^Config) -> [dynamic]^types.Type {
+parse :: proc(c: ^config.Config) -> [dynamic]^types.Type {
     idx := clang.createIndex(0, 1);
     defer clang.disposeIndex(idx)
 
@@ -169,7 +170,7 @@ parse :: proc(config: ^Config) -> [dynamic]^types.Type {
     cursor := clang.getTranslationUnitCursor(tu)
     
     default_allocator: = context.allocator
-    state := make_state(config, &default_allocator)
+    state := make_state(c, &default_allocator)
     defer delete(state.cached)
     defer delete(state.pending)
 

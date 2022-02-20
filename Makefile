@@ -14,7 +14,6 @@ build:
 		-extra-linker-flags:-lclang \
 		-debug
 
-	
 .PHONY: run
 run: build
 	./dist/main
