@@ -1,13 +1,14 @@
 package printer
 
-import "../layout"
-import "../types"
-
 import "core:fmt"
 import "core:os"
 import "core:c"
 import "core:slice"
 import "core:strings"
+
+import "../layout"
+import "../types"
+import "../config"
 
 State :: struct {
     buffer: ^strings.Builder,
@@ -48,13 +49,14 @@ print :: proc(s: ^State, t: ^types.Type, variant: types.TypeVariant) {
     }
 }
 
-print_setup :: proc(s: ^State) {
-    pprintf(s, "package dist\n\n")
+print_setup :: proc(c: ^config.Config, s: ^State) {
+    pprintf(s, "package %s\n\n", c.library)
     pprintf(s, "import _c \"core:c\"\n\n")
+    pprintf(s, "foreign import %s \"%s\"\n\n", c.library, c.library_path)
     // pprintf(s, "import _c \"core:c\"\n\n")
 }
 
-run :: proc (layout_state: layout.State) {
+run :: proc (c: ^config.Config, layout_state: layout.State) {
     buffer := strings.make_builder()
     defer 
     {
@@ -62,9 +64,12 @@ run :: proc (layout_state: layout.State) {
         strings.destroy_builder(&buffer);
     }
     state := State{&buffer}
-    print_setup(&state)
+    print_setup(c, &state)
     
-    strings.write_string(&buffer, "foreign dist {\n");
+    // Can stop passing curly bracked as string once
+    // https://github.com/odin-lang/Odin/issues/1523 is resolved
+    pprintf(&state, "foreign %s %s\n", c.library, "{")
+    // strings.write_string(&buffer, "foreign  {\n");
 
     for item in layout_state.fns {
         print(&state, item, item.variant)

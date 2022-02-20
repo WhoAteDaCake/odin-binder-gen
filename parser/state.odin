@@ -2,11 +2,8 @@ package parser
 
 import "core:runtime"
 import "../types"
+import "../config"
 
-
-Config :: struct {
-    allowed_headers: []string,
-}
 
 State :: struct {
     declared: [dynamic]^types.Type,
@@ -14,10 +11,10 @@ State :: struct {
     allocator: ^runtime.Allocator,
     // Used when parsing subfields of functions or structs 
     pending: [dynamic]^types.Type,
-    config: ^Config,
+    config: ^config.Config,
 }
 
-make_state :: proc(c: ^Config, allocator: ^runtime.Allocator) -> ^State {
+make_state :: proc(c: ^config.Config, allocator: ^runtime.Allocator) -> ^State {
     value := new(State)
     value.allocator = allocator
     value.declared = make([dynamic]^types.Type)
