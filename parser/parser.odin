@@ -30,7 +30,11 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         // }
         // Check if I need to handle special case for function pointers
         case .CXType_Pointer: {
-            output.variant = types.Pointer{type_(s, clang.getPointeeType(t))}
+            pointee := clang.getPointeeType(t)
+            output.variant = types.Pointer{
+                type_(s, pointee),
+                clang.isConstQualifiedType(pointee) == 1,
+            }
         }
         case .CXType_Void: {
             output.variant = types.primitive("rawptr", false)

@@ -56,6 +56,7 @@ FieldDecl :: struct {
 Pointer :: struct
 {
     base: ^Type,
+    is_const: bool,
 }
 
 Struct :: struct
