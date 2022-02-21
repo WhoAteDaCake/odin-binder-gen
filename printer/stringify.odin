@@ -39,6 +39,7 @@ pointer_to_s :: proc(v: types.Pointer) -> string {
 }
 
 type_to_s :: proc (t: ^types.Type) -> string {
+    
     #partial switch v in t.variant {
         case types.FieldDecl:
             return field_decl_to_s(v)
@@ -46,6 +47,10 @@ type_to_s :: proc (t: ^types.Type) -> string {
             return primitive_to_s(v)
         case types.Pointer:
             return pointer_to_s(v)
+        case types.Node_Ref:
+            return v.base.name
+        case:
+            return t.name
     }
     return ""
 }

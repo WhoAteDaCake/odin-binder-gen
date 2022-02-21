@@ -69,6 +69,8 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
 visit_typedef :: proc(s: ^State, cursor: clang.CXCursor) -> types.Typedef {
     t := clang.getTypedefDeclUnderlyingType(cursor)
     base := type_(s, t)
+    // ^ Will this always return a NodeRef? Could be optimised 
+    // Maybe is a primitive sometimes
     name := spelling(t)
     return types.Typedef{name,base}
 }

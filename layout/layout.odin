@@ -20,13 +20,14 @@ handle_struct :: proc(s: ^State, t: ^types.Type, v: types.Struct) {
 }
 
 handle_typedef :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
-    if strings.contains(t.name, "struct ") {
-        name, was_allocation := strings.remove(t.name, "struct ", 1)
-        if was_allocation {
-            delete(t.name)
-        }
-        t.name = name
+    if strings.contains(v.name, "struct ") {
+        name, was_allocation := strings.remove(v.name, "struct ", 1)
+        // if was_allocation {
+        //     delete(v.name)
+        // }
+        t.variant = types.Typedef{name, v.base}
     }
+    // fmt.println(v.base)
     append(&s.defs, t)
 }
 
@@ -42,7 +43,8 @@ handle :: proc(s: ^State, t: ^types.Type) {
             handle_typedef(s, t, v)
         case types.Func:
             handle_func(s, t, v)
-    }   
+    } 
+    // fmt.println(t)
 }
 
 resolve :: proc(ps: ^state.ParserState) -> ^State {
@@ -50,5 +52,6 @@ resolve :: proc(ps: ^state.ParserState) -> ^State {
 
     for entry in ps.declared do handle(s, entry)
 
+    // fmt.println("----------")
     return s
 }
