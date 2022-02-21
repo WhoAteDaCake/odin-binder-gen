@@ -8,24 +8,24 @@
 
 // #include "python3.8/Python.h"
 
-// #include "deps/buffer/buffer.h"
+#include "deps/buffer/buffer.h"
 
 #include <sys/types.h>
 
-/*
- * Buffer struct.
- */
+// /*
+//  * Buffer struct.
+//  */
 
-typedef struct {
-  size_t len;
-  char *alloc;
-  char *data;
-} buffer_t;
+// typedef struct {
+//   size_t len;
+//   char *alloc;
+//   char *data;
+// } buffer_t;
 
-// prototypes
+// // prototypes
 
-buffer_t *
-buffer_new();
+// buffer_t *
+// buffer_new();
 
-buffer_t *
-buffer_new_with_size(size_t n);
+// buffer_t *
+// buffer_new_with_size(size_t n);

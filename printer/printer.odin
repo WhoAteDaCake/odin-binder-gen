@@ -36,10 +36,23 @@ print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
     param_l := params_to_s(s, v.params, ",")
     defer delete(param_l)
 
-    ret := type_to_s(v.ret)
-    defer delete(ret)
+    ret := ""
 
-    pprintf(s, "%s :: proc(%s) -> %s --- \n", t.name, param_l, ret)
+    #partial switch r_v in v.ret.variant {
+        case types.Primitive:
+            if r_v.type_ != "rawptr" do ret = type_to_s(v.ret)
+        case:
+            ret = type_to_s(v.ret)
+    }
+
+    if len(ret) != 0 {
+        ret = fmt.aprintf(" -> %s", ret)
+    }
+    // Requires to make sure all values are cloned 
+    // before I can delete it here
+    // defer delete(ret)
+
+    pprintf(s, "%s :: proc(%s)%s --- \n", t.name, param_l, ret)
 }
 
 print_struct_decl :: proc(s: ^State, t: ^types.Type, v: types.Struct) {

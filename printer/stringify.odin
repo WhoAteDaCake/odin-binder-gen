@@ -39,7 +39,6 @@ pointer_to_s :: proc(v: types.Pointer) -> string {
 }
 
 type_to_s :: proc (t: ^types.Type) -> string {
-    
     #partial switch v in t.variant {
         case types.FieldDecl:
             return field_decl_to_s(v)
