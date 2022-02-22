@@ -21,6 +21,7 @@ run: build
 .PHONY: deps
 deps:
 	clib install clibs/buffer
+	clib install flag
 
 .PHONY: build-deps
 build-deps:
