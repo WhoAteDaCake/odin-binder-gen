@@ -38,6 +38,11 @@ pointer_to_s :: proc(v: types.Pointer) -> string {
     return fmt.aprintf("^%s", type_to_s(v.base))  
 }
 
+enum_to_s :: proc(t: ^types.Type, v: types.EnumValue) -> string {
+    return fmt.aprintf("%s = %d", t.name, v.value)
+}
+
+
 type_to_s :: proc (t: ^types.Type) -> string {
     #partial switch v in t.variant {
         case types.FieldDecl:
@@ -48,6 +53,8 @@ type_to_s :: proc (t: ^types.Type) -> string {
             return pointer_to_s(v)
         case types.Node_Ref:
             return v.base.name
+        case types.EnumValue:
+            return enum_to_s(t, v)
         case:
             return t.name
     }

@@ -9,13 +9,13 @@
 // #include "python3.8/Python.h"
 
 // #include "deps/buffer/buffer.h"
-// #include "deps/flag/flag.h"
-typedef enum {
-  FLAG_OK,
-  FLAG_ERROR_PARSING,
-  FLAG_ERROR_ARG_MISSING,
-  FLAG_ERROR_UNDEFINED_FLAG
-} flag_error;
+#include "deps/flag/flag.h"
+// typedef enum {
+//   FLAG_OK,
+//   FLAG_ERROR_PARSING,
+//   FLAG_ERROR_ARG_MISSING,
+//   FLAG_ERROR_UNDEFINED_FLAG
+// } flag_error;
 
 // #include <sys/types.h>
 

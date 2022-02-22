@@ -69,7 +69,12 @@ print_typedef_decl :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
 } 
 
 print_enum_decl :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
-    // pprintf(s, "%s :: %s\n", t.name, type_to_s(v.base))
+    param_l := params_to_s(s, v.fields, ",\n")
+    defer delete(param_l)
+
+    pprintf(s, "%s :: enum %s {{\n", t.name, type_to_s(v.type_))
+    pprintf(s, "%s,\n", param_l)
+    pprintf(s, "}}\n")
 } 
 
 print_setup :: proc(c: ^config.Config, s: ^State) {
@@ -92,6 +97,8 @@ run :: proc (
                 print_struct_decl(s, t, v)
             case types.Typedef:
                 print_typedef_decl(s, t, v)
+            case types.EnumDecl:
+                print_enum_decl(s, t, v)
         }
     }
 
