@@ -127,16 +127,36 @@ visit_struct_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Struct {
     return types.Struct{ls}
 }
 
-// visit_field_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
-//     name := spelling(cursor)
+visit_enum_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.EnumDecl {
+    t := type_(s, clang.getEnumDeclIntegerType(cursor))
+    pending := s.pending
+    s.pending = make([dynamic]^types.Type)
+    // Parse internal arguments
+    visit_children(
+        s,
+        cursor,
+        proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
+            if cursor.kind == clang.CXCursorKind.CXCursor_EnumConstantDecl {
+                append(&s.pending, visit(s, cursor))
+            }
+            return clang.CXChildVisitResult.CXChildVisit_Continue;
+        },
+    )
+    // Swap back to old data
+    ls := s.pending[:]
+    s.pending = pending
+    return types.EnumDecl{t,ls}
+} 
 
-// } 
+visit_enum_const_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.EnumValue {
+    return types.EnumValue{clang.getEnumConstantDeclValue(cursor)}
+}
 
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
-    // fmt.println(spelling(cursor))
     output.name = spelling(cursor)
     // // fmt.println(output.name)
+    fmt.println(cursor.kind)
     #partial switch cursor.kind {
         case .CXCursor_FunctionDecl: 
             output.variant = visit_function_decl(s, cursor)
@@ -150,6 +170,10 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
             output.variant = visit_struct_decl(s, cursor)
         case .CXCursor_FieldDecl:
             output.variant = visit_param_decl(s, cursor)
+        case .CXCursor_EnumDecl:
+            output.variant = visit_enum_decl(s, cursor)
+        case .CXCursor_EnumConstantDecl:
+            output.variant = visit_enum_const_decl(s, cursor)
     }
     return output
 }

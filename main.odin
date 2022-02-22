@@ -11,9 +11,9 @@ import "./state"
 
 main :: proc () {
     cfg := config.Config{
-        []string{"deps/buffer", "test/headers"},
-        "deps/buffer/buffer.so",
-        "buffer",
+        []string{"deps/flag", "test/headers"},
+        "deps/flag/flag.so",
+        "flag",
     }
 
     p_state := parser.parse(&cfg)

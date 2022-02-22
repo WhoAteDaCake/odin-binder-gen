@@ -27,3 +27,5 @@ deps:
 build-deps:
 	cd deps/buffer && \
 		gcc -shared -I. -o buffer.so -fPIC buffer.c
+	cd deps/flag && \
+		gcc -shared -I. -o flag.so -fPIC flag.c

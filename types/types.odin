@@ -12,6 +12,8 @@ TypeVariant :: union{
     Va_Arg,
     Node_Ref,
     FieldDecl,
+    EnumDecl,
+    EnumValue,
 }
 
 Type :: struct
@@ -59,20 +61,26 @@ Pointer :: struct
     is_const: bool,
 }
 
-Struct :: struct
-{
+Struct :: struct {
     fields: []^Type,
 }
 
-Union :: struct
-{
+Union :: struct {
     fields: []^Type,
 }
 
-Array :: struct
-{
+Array :: struct {
     base: ^Type,
     size: i64,
+}
+
+EnumValue :: struct {
+    value: i64,
+}
+
+EnumDecl :: struct {
+    type_: ^Type,
+    fields: []^Type,
 }
 
 primitive_by_name :: proc(name: string) -> Primitive {
