@@ -156,7 +156,7 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
     output.name = spelling(cursor)
     // // fmt.println(output.name)
-    fmt.println(cursor.kind)
+    // fmt.println(cursor.kind)
     #partial switch cursor.kind {
         case .CXCursor_FunctionDecl: 
             output.variant = visit_function_decl(s, cursor)
@@ -171,6 +171,7 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
         case .CXCursor_FieldDecl:
             output.variant = visit_param_decl(s, cursor)
         case .CXCursor_EnumDecl:
+            s.cached[clang.hashCursor(cursor)] = output
             output.variant = visit_enum_decl(s, cursor)
         case .CXCursor_EnumConstantDecl:
             output.variant = visit_enum_const_decl(s, cursor)
