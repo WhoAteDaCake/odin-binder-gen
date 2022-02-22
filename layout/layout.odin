@@ -31,6 +31,14 @@ handle_typedef :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
     append(&s.defs, t)
 }
 
+handle_enum :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
+    if len(t.name) == 0 {
+        t.name = fmt.aprintf("_anon_%d", s.id)
+        s.id += 1
+    }
+    append(&s.defs, t)
+}
+
 handle_func :: proc(s: ^State, t: ^types.Type, v: types.Func) {
     append(&s.fns, t)
 }
@@ -43,6 +51,8 @@ handle :: proc(s: ^State, t: ^types.Type) {
             handle_typedef(s, t, v)
         case types.Func:
             handle_func(s, t, v)
+        case types.EnumDecl:
+            handle_enum(s, t, v)
     } 
     // fmt.println(t)
 }

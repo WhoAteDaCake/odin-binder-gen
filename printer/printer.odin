@@ -68,6 +68,10 @@ print_typedef_decl :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
     pprintf(s, "%s :: %s\n", t.name, type_to_s(v.base))
 } 
 
+print_enum_decl :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
+    // pprintf(s, "%s :: %s\n", t.name, type_to_s(v.base))
+} 
+
 print_setup :: proc(c: ^config.Config, s: ^State) {
     pprintf(s, "package %s\n\n", c.library)
     pprintf(s, "import _c \"core:c\"\n\n")

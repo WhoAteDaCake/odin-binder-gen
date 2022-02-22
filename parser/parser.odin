@@ -47,6 +47,9 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         case .CXType_Int: {
             output.variant = types.primitive("int")
         }
+        case .CXType_UInt: {
+            output.variant = types.primitive("uint")
+        }
         case .CXType_Typedef: {
             if types.is_builtin(output.name) {
                 output.variant = types.primitive(output.name)
@@ -155,7 +158,7 @@ visit_enum_const_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.EnumVa
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
     output.name = spelling(cursor)
-    // // fmt.println(output.name)
+    // fmt.println(output.name)
     // fmt.println(cursor.kind)
     #partial switch cursor.kind {
         case .CXCursor_FunctionDecl: 
