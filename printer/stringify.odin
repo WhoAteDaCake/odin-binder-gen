@@ -42,8 +42,12 @@ enum_to_s :: proc(t: ^types.Type, v: types.EnumValue) -> string {
     return fmt.aprintf("%s = %d", t.name, v.value)
 }
 
+array_to_s :: proc(t: ^types.Type, v: types.Array) -> string {
+    return fmt.aprintf("[%d]%s", v.size, type_to_s(v.base))
+}
 
 type_to_s :: proc (t: ^types.Type) -> string {
+    // fmt.println(t)
     #partial switch v in t.variant {
         case types.FieldDecl:
             return field_decl_to_s(v)
@@ -55,6 +59,8 @@ type_to_s :: proc (t: ^types.Type) -> string {
             return v.base.name
         case types.EnumValue:
             return enum_to_s(t, v)
+        case types.Array:
+            return array_to_s(t, v)
         case:
             return t.name
     }

@@ -1,15 +1,23 @@
-// https://github.com/Breush/odin-binding-generator/blob/master/tests/parsing/headers/source.h
 
-// https://github.com/Breush/odin-binding-generator/issues/16
-// typedef int cookie_read_function_t(void *__cookie, char *__buf, int __nbytes);
-// typedef struct _IO_cookie_io_functions_t {
-//   cookie_read_function_t *read;
-// } cookie_io_functions_t;
+// #include <stdbool.h>
+// #include <stdio.h>
 
-// #include "python3.8/Python.h"
+// /*
+//  * Max flags that may be defined.
+//  */
 
-// #include "deps/buffer/buffer.h"
-#include "deps/flag/flag.h"
+// #define FLAGS_MAX 128
+
+// /*
+//  * Max arguments supported for set->argv.
+//  */
+
+// #define FLAGS_MAX_ARGS 128
+
+// /*
+//  * Flag errors.
+//  */
+
 // typedef enum {
 //   FLAG_OK,
 //   FLAG_ERROR_PARSING,
@@ -17,22 +25,51 @@
 //   FLAG_ERROR_UNDEFINED_FLAG
 // } flag_error;
 
-// #include <sys/types.h>
+// /*
+//  * Flag types supported.
+//  */
+
+// typedef enum {
+//   FLAG_TYPE_INT,
+//   FLAG_TYPE_BOOL,
+//   FLAG_TYPE_STRING
+// } flag_type;
 
 // /*
-//  * Buffer struct.
+//  * Flag represents as single user-defined
+//  * flag with a name, help description,
+//  * type, and pointer to a value which
+//  * is replaced upon precense of the flag.
 //  */
 
 // typedef struct {
-//   size_t len;
-//   char *alloc;
-//   char *data;
-// } buffer_t;
+//   const char *name;
+//   const char *help;
+//   flag_type type;
+//   void *value;
+// } flag_t;
 
-// // prototypes
+// /*
+//  * Flagset contains a number of flags,
+//  * and is populated wth argc / argv with the
+//  * remaining arguments.
+//  *
+//  * In the event of an error the error union
+//  * is populated with either the flag or the
+//  * associated argument.
+//  */
 
-// buffer_t *
-// buffer_new();
-
-// buffer_t *
-// buffer_new_with_size(size_t n);
+// typedef struct {
+//   const char *usage;
+//   int nflags;
+//   flag_t flags[FLAGS_MAX];
+// //   int argc;
+// //   const char *argv[FLAGS_MAX_ARGS];
+// //   union {
+// //     flag_t *flag;
+// //     const char *arg;
+// //   } error;
+// } flagset_t;
+typedef struct {
+    int flags[20];
+} flag_item;

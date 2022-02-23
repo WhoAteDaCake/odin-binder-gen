@@ -26,7 +26,14 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
     // fmt.println(t.kind, spelling(t))
     output.name = spelling(t)
 
+    // fmt.println(t.kind)
     #partial switch t.kind {
+        case .CXType_ConstantArray: {
+            output.variant = types.Array{
+              type_(s, clang.getArrayElementType(t)), 
+              clang.getArraySize(t),
+            }
+        }
         // case .CXType_FunctionProto: {
         //     output.variant = build_function_type(t)
         // }
