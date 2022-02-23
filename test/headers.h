@@ -70,6 +70,14 @@
 // //     const char *arg;
 // //   } error;
 // } flagset_t;
-typedef struct {
-    int flags[20];
-} flag_item;
+// typedef struct {
+//   union {
+//     int *flag;
+//     const char *arg;
+//   } error;
+// } flag_item;
+
+union {
+    int *flag;
+    const char *arg;
+} error;

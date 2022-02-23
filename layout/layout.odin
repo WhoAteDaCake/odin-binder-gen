@@ -8,13 +8,13 @@ import "core:strings"
 
 State :: state.LayoutState
 
-handle_struct :: proc(s: ^State, t: ^types.Type, v: types.Struct) {
+handle_struct :: proc(s: ^State, t: ^types.Type, fields: []^types.Type) {
     if len(t.name) == 0 {
         t.name = fmt.aprintf("_anon_%d", s.id)
         s.id += 1
     }
     append(&s.defs, t)
-    for field in v.fields {
+    for field in fields {
         handle(s, field)
     }
 }
@@ -39,21 +39,19 @@ handle_enum :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
     append(&s.defs, t)
 }
 
-handle_func :: proc(s: ^State, t: ^types.Type, v: types.Func) {
-    append(&s.fns, t)
-}
-
 handle :: proc(s: ^State, t: ^types.Type) {
     #partial switch v in t.variant {
         case types.Struct:
-            handle_struct(s, t, v)
+            handle_struct(s, t, v.fields)
         case types.Typedef:
             handle_typedef(s, t, v)
         case types.Func:
-            handle_func(s, t, v)
+            append(&s.fns, t)
         case types.EnumDecl:
             handle_enum(s, t, v)
-    } 
+        case types.Union:
+            handle_struct(s, t, v.fields)
+    }
     // fmt.println(t)
 }
 

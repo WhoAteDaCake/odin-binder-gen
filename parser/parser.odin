@@ -127,7 +127,9 @@ visit_struct_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Struct {
         s,
         cursor,
         proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
-            append(&s.pending, visit(s, cursor))
+            if cursor.kind == clang.CXCursorKind.CXCursor_FieldDecl {
+                append(&s.pending, visit(s, cursor))
+            }
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
     )
@@ -162,6 +164,26 @@ visit_enum_const_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.EnumVa
     return types.EnumValue{clang.getEnumConstantDeclValue(cursor)}
 }
 
+visit_union_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Union {
+    pending := s.pending
+    s.pending = make([dynamic]^types.Type)
+    // Parse internal arguments
+    visit_children(
+        s,
+        cursor,
+        proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
+            if cursor.kind == clang.CXCursorKind.CXCursor_FieldDecl {
+                append(&s.pending, visit(s, cursor))
+            }
+            return clang.CXChildVisitResult.CXChildVisit_Continue;
+        },
+    )
+    // Swap back to old data
+    ls := s.pending[:]
+    s.pending = pending
+    return types.Union{ls}
+}
+
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
     output.name = spelling(cursor)
@@ -185,6 +207,8 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
             output.variant = visit_enum_decl(s, cursor)
         case .CXCursor_EnumConstantDecl:
             output.variant = visit_enum_const_decl(s, cursor)
+        case .CXCursor_UnionDecl:
+            output.variant = visit_union_decl(s, cursor)
     }
     return output
 }

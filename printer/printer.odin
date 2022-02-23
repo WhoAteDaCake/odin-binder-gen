@@ -55,11 +55,11 @@ print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
     pprintf(s, "%s :: proc(%s)%s --- \n", t.name, param_l, ret)
 }
 
-print_struct_decl :: proc(s: ^State, t: ^types.Type, v: types.Struct) {
-    param_l := params_to_s(s, v.fields, ",\n")
+print_struct_decl :: proc(s: ^State, t: ^types.Type, meta: string, fields: []^types.Type) {
+    param_l := params_to_s(s, fields, ",\n")
     defer delete(param_l)
 
-    pprintf(s, "%s :: {{\n", t.name)
+    pprintf(s, "%s :: struct %s {{\n", t.name, meta)
     pprintf(s, "%s,\n", param_l)
     pprintf(s, "}}\n")
 }
@@ -94,11 +94,13 @@ run :: proc (
     for t in l_state.defs {
         #partial switch v in t.variant  {
             case types.Struct:
-                print_struct_decl(s, t, v)
+                print_struct_decl(s, t, "", v.fields)
             case types.Typedef:
                 print_typedef_decl(s, t, v)
             case types.EnumDecl:
                 print_enum_decl(s, t, v)
+            case types.Union:
+                print_struct_decl(s, t, "#raw_union", v.fields)
         }
     }
 
