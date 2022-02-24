@@ -77,7 +77,7 @@
 //   } error;
 // } flag_item;
 
-union {
-    int *flag;
-    const char *arg;
-} error;
+
+typedef struct {
+    int test;
+} flag_item;

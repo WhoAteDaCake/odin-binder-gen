@@ -97,9 +97,11 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
         s,
         cursor,
         proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
-            // We don't care about other params here
             if cursor.kind == clang.CXCursorKind.CXCursor_ParmDecl {
                 append(&s.pending, visit(s, cursor))
+            } else {
+                // append(&s.pending, visit(s, cursor))
+                append(&s.declared, visit(s, cursor))
             }
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
@@ -127,8 +129,11 @@ visit_struct_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Struct {
         s,
         cursor,
         proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
+            t := visit(s, cursor)
             if cursor.kind == clang.CXCursorKind.CXCursor_FieldDecl {
-                append(&s.pending, visit(s, cursor))
+                append(&s.pending, t)
+            } else {
+                append(&s.declared, t)
             }
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
@@ -174,6 +179,9 @@ visit_union_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Union {
         proc(s: ^State, cursor: clang.CXCursor) -> clang.CXChildVisitResult {
             if cursor.kind == clang.CXCursorKind.CXCursor_FieldDecl {
                 append(&s.pending, visit(s, cursor))
+            } else {
+                // append(&s.pending, visit(s, cursor))
+                append(&s.declared, visit(s, cursor))
             }
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
@@ -208,6 +216,7 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
         case .CXCursor_EnumConstantDecl:
             output.variant = visit_enum_const_decl(s, cursor)
         case .CXCursor_UnionDecl:
+            s.cached[clang.hashCursor(cursor)] = output
             output.variant = visit_union_decl(s, cursor)
     }
     return output
