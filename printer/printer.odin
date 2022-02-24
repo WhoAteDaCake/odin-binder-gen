@@ -33,7 +33,7 @@ params_to_s :: proc(s: ^State, ls: []^types.Type, join_on: string) -> string {
 }
 
 print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
-    param_l := params_to_s(s, v.params, ",")
+    param_l := params_to_s(s, v.params, ", ")
     defer delete(param_l)
 
     ret := ""
@@ -52,27 +52,27 @@ print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
     // before I can delete it here
     // defer delete(ret)
 
-    pprintf(s, "%s :: proc(%s)%s --- \n", t.name, param_l, ret)
+    pprintf(s, "%s :: proc(%s)%s --- \n", name(t), param_l, ret)
 }
 
 print_struct_decl :: proc(s: ^State, t: ^types.Type, meta: string, fields: []^types.Type) {
     param_l := params_to_s(s, fields, ",\n")
     defer delete(param_l)
 
-    pprintf(s, "%s :: struct %s {{\n", t.name, meta)
+    pprintf(s, "%s :: struct %s {{\n", name(t), meta)
     pprintf(s, "%s,\n", param_l)
     pprintf(s, "}}\n")
 }
 
 print_typedef_decl :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
-    pprintf(s, "%s :: %s\n", t.name, type_to_s(v.base))
+    pprintf(s, "%s :: %s\n", name(t), type_to_s(v.base))
 } 
 
 print_enum_decl :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
     param_l := params_to_s(s, v.fields, ",\n")
     defer delete(param_l)
 
-    pprintf(s, "%s :: enum %s {{\n", t.name, type_to_s(v.type_))
+    pprintf(s, "%s :: enum %s {{\n", name(t), type_to_s(v.type_))
     pprintf(s, "%s,\n", param_l)
     pprintf(s, "}}\n")
 } 

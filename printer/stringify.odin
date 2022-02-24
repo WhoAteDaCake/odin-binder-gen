@@ -12,7 +12,7 @@ import "core:strings"
 C_PREFIX :: string("_c.")
 
 field_decl_to_s :: proc(v: types.FieldDecl) -> string {
-    return fmt.aprintf("%s: %s", v.name, type_to_s(v.type_))
+    return fmt.aprintf("%s: %s", name(v.name), type_to_s(v.type_))
 }
 
 primitive_to_s :: proc(v: types.Primitive) -> string {
@@ -39,7 +39,7 @@ pointer_to_s :: proc(v: types.Pointer) -> string {
 }
 
 enum_to_s :: proc(t: ^types.Type, v: types.EnumValue) -> string {
-    return fmt.aprintf("%s = %d", t.name, v.value)
+    return fmt.aprintf("%s = %d", name(t), v.value)
 }
 
 array_to_s :: proc(t: ^types.Type, v: types.Array) -> string {
@@ -56,13 +56,23 @@ type_to_s :: proc (t: ^types.Type) -> string {
         case types.Pointer:
             return pointer_to_s(v)
         case types.Node_Ref:
-            return v.base.name
+            return name(v.base)
         case types.EnumValue:
             return enum_to_s(t, v)
         case types.Array:
             return array_to_s(t, v)
         case:
-            return t.name
+            return name(t)
     }
     return ""
 }
+
+name_of_type :: proc (t: ^types.Type) -> string {
+    return name_of_string(t.name)
+}
+
+name_of_string :: proc (name: string) -> string {
+    return name
+}
+
+name :: proc {name_of_type, name_of_string}
