@@ -45,6 +45,9 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
                 clang.isConstQualifiedType(pointee) == 1,
             }
         }
+        case .CXType_Bool: {
+            output.variant = types.primitive("bool")
+        }
         case .CXType_Void: {
             output.variant = types.primitive("rawptr", false)
         }
@@ -79,6 +82,7 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
 visit_typedef :: proc(s: ^State, cursor: clang.CXCursor) -> types.Typedef {
     t := clang.getTypedefDeclUnderlyingType(cursor)
     base := type_(s, t)
+    fmt.println(base)
     // ^ Will this always return a NodeRef? Could be optimised 
     // Maybe is a primitive sometimes
     name := spelling(t)
