@@ -82,12 +82,14 @@ build_function_type :: proc(s: ^State, t: clang.CXType) -> types.Func {
     ret := type_(s, clang.getResultType(t))
     n := cast(u32) clang.getNumArgTypes(t)
     params := make([]^types.Type, n)
-    for i in 0..(n - 1) {
-        at := clang.getArgType(t, i)
-        // print()
-        // cursor := clang.getTypeDeclaration(t)
-        // fmt.println(cursor_spelling(cursor))
-        params[i] = type_(s, at)
+    if len(params) > 0 {
+        for i in 0..(n - 1) {
+            at := clang.getArgType(t, i)
+            // print()
+            // cursor := clang.getTypeDeclaration(t)
+            // fmt.println(cursor_spelling(cursor))
+            params[i] = type_(s, at)
+        }
     }
     return types.Func{false,ret,params}
 }

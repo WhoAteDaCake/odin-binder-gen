@@ -11,9 +11,9 @@ import "./state"
 
 main :: proc () {
     cfg := config.Config{
-        []string{"deps/flag", "test/headers"},
-        "deps/flag/flag.so",
-        "flag",
+        []string{"python3.8", "test/headers"},
+        "system:python3.8",
+        "python",
     }
 
     p_state := parser.parse(&cfg)
