@@ -34,9 +34,10 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
               clang.getArraySize(t),
             }
         }
-        // case .CXType_FunctionProto: {
-        //     output.variant = build_function_type(t)
-        // }
+        case .CXType_FunctionProto: {
+            build_function_type(s, t)
+            // output.variant = build_function_type(s, t)
+        }
         // Check if I need to handle special case for function pointers
         case .CXType_Pointer: {
             pointee := clang.getPointeeType(t)
@@ -74,15 +75,28 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             found := s.cached[clang.hashCursor(cursor)]
             output.variant = types.Node_Ref{found}
         }
-        // case: // fmt.println(t.kind)
     }
     return output
+}
+
+build_function_type :: proc(s: ^State, t: clang.CXType) -> types.Func {
+    ret := type_(s, clang.getResultType(t))
+    n := cast(u32) clang.getNumArgTypes(t)
+    params := make([]^types.Type, n)
+    for i in 0..(n - 1) {
+        at := clang.getArgType(t, i)
+        // print()
+        // cursor := clang.getTypeDeclaration(t)
+        // fmt.println(cursor_spelling(cursor))
+        params[i] = type_(s, at)
+    }
+    return types.Func{false,ret,params}
 }
 
 visit_typedef :: proc(s: ^State, cursor: clang.CXCursor) -> types.Typedef {
     t := clang.getTypedefDeclUnderlyingType(cursor)
     base := type_(s, t)
-    fmt.println(base)
+    // fmt.println(base)
     // ^ Will this always return a NodeRef? Could be optimised 
     // Maybe is a primitive sometimes
     name := spelling(t)
