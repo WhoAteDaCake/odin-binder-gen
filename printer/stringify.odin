@@ -46,6 +46,53 @@ array_to_s :: proc(t: ^types.Type, v: types.Array) -> string {
     return fmt.aprintf("[%d]%s", v.size, type_to_s(v.base))
 }
 
+func_to_s :: proc(t: ^types.Type, v: types.Func) -> string {
+    param_l := params_to_s(v.params, ", ")
+    defer delete(param_l)
+
+    ret := ""
+
+    #partial switch r_v in v.ret.variant {
+        case types.Primitive:
+            if r_v.type_ != "rawptr" do ret = type_to_s(v.ret)
+        case:
+            ret = type_to_s(v.ret)
+    }
+
+    if len(ret) != 0 {
+        ret = fmt.aprintf(" -> %s", ret)
+    }
+    return fmt.aprintf("proc(%s)%s", param_l, ret)
+}
+
+
+params_to_s :: proc(ls: []^types.Type, join_on: string) -> string {
+    params := make([]string, len(ls))
+    defer {
+        for param in params do delete(param)
+        delete(params) 
+    }
+    
+    for param, index in ls {
+        // Is this always field_decl_to_s ?
+        #partial switch v in param.variant {
+            case types.FieldDecl:
+                params[index] = field_decl_to_s(v)
+            case:
+                // Unnamed
+                t := types.FieldDecl{
+                    fmt.aprintf("unamed%d", index),
+                    param,
+                }
+                params[index] = field_decl_to_s(t)
+                // fmt.println(param.variant)
+                // fmt.println("Unexpected field")
+        }
+    }
+
+    return strings.join(params, join_on)
+}
+
 type_to_s :: proc (t: ^types.Type) -> string {
     // fmt.println(t)
     #partial switch v in t.variant {
@@ -59,6 +106,8 @@ type_to_s :: proc (t: ^types.Type) -> string {
             return name(v.base)
         case types.EnumValue:
             return enum_to_s(t, v)
+        case types.Func:
+            return func_to_s(t, v)
         case types.Array:
             return array_to_s(t, v)
         case:

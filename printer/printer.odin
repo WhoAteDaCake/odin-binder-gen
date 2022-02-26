@@ -18,45 +18,12 @@ pprintf :: proc(using s: ^State, fmt_str: string, args: ..any)
     strings.write_string(buffer, fmt.tprintf(fmt_str, ..args));
 }
 
-params_to_s :: proc(s: ^State, ls: []^types.Type, join_on: string) -> string {
-    params := make([]string, len(ls))
-    defer {
-        for param in params do delete(param)
-        delete(params) 
-    }
-    
-    for param, index in ls {
-        params[index] = type_to_s(param)
-    }
-
-    return strings.join(params, join_on)
-}
-
 print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
-    param_l := params_to_s(s, v.params, ", ")
-    defer delete(param_l)
-
-    ret := ""
-
-    #partial switch r_v in v.ret.variant {
-        case types.Primitive:
-            if r_v.type_ != "rawptr" do ret = type_to_s(v.ret)
-        case:
-            ret = type_to_s(v.ret)
-    }
-
-    if len(ret) != 0 {
-        ret = fmt.aprintf(" -> %s", ret)
-    }
-    // Requires to make sure all values are cloned 
-    // before I can delete it here
-    // defer delete(ret)
-
-    pprintf(s, "%s :: proc(%s)%s --- \n", name(t), param_l, ret)
+    pprintf(s, "%s :: %s --- \n", name(t), func_to_s(t, v))
 }
 
 print_struct_decl :: proc(s: ^State, t: ^types.Type, meta: string, fields: []^types.Type) {
-    param_l := params_to_s(s, fields, ",\n")
+    param_l := params_to_s(fields, ",\n")
     defer delete(param_l)
 
     pprintf(s, "%s :: struct %s {{\n", name(t), meta)
@@ -69,7 +36,7 @@ print_typedef_decl :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
 } 
 
 print_enum_decl :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
-    param_l := params_to_s(s, v.fields, ",\n")
+    param_l := params_to_s(v.fields, ",\n")
     defer delete(param_l)
 
     pprintf(s, "%s :: enum %s {{\n", name(t), type_to_s(v.type_))

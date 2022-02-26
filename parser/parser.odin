@@ -35,8 +35,7 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             }
         }
         case .CXType_FunctionProto: {
-            build_function_type(s, t)
-            // output.variant = build_function_type(s, t)
+            output.variant = build_function_type(s, t)
         }
         // Check if I need to handle special case for function pointers
         case .CXType_Pointer: {
