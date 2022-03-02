@@ -34,12 +34,19 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
               clang.getArraySize(t),
             }
         }
+        case .CXType_IncompleteArray: {
+            output.variant = types.Array{
+              type_(s, clang.getArrayElementType(t)), 
+              0,
+            }
+        }
         case .CXType_FunctionProto: {
             output.variant = build_function_type(s, t)
         }
         // Check if I need to handle special case for function pointers
         case .CXType_Pointer: {
             pointee := clang.getPointeeType(t)
+            // fmt.println(spelling(t))
             output.variant = types.Pointer{
                 type_(s, pointee),
                 clang.isConstQualifiedType(pointee) == 1,
@@ -60,6 +67,27 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         case .CXType_UInt: {
             output.variant = types.primitive("uint")
         }
+        case .CXType_UShort: {
+            output.variant = types.primitive("ushort")
+        }
+        case .CXType_Double: {
+            output.variant = types.primitive("double")
+        }
+        case .CXType_ULong: {
+            output.variant = types.primitive("ulong")
+        }
+        case .CXType_Long: {
+            output.variant = types.primitive("long")
+        }
+        case .CXType_LongLong: {
+            output.variant = types.primitive("longlong")
+        }
+        case .CXType_ULongLong: {
+            output.variant = types.primitive("ulonglong")
+        }
+        case .CXType_UChar: {
+            output.variant = types.primitive("uchar")
+        }
         case .CXType_Typedef: {
             if types.is_builtin(output.name) {
                 output.variant = types.primitive(output.name)
@@ -71,9 +99,11 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         }
         case .CXType_Elaborated: {
             cursor := clang.getTypeDeclaration(t)
-            found := s.cached[clang.hashCursor(cursor)]
-            output.variant = types.Node_Ref{found}
+            hash := clang.hashCursor(cursor)
+            found := s.cached[hash]
+            output.variant = types.Node_Ref{found,hash}
         }
+        case: fmt.println(t.kind)
     }
     return output
 }
@@ -134,7 +164,8 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
 }
 
 visit_param_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
-   return types.FieldDecl{
+//    fmt.println("Field: %s", spelling(cursor))
+    return types.FieldDecl{
        spelling(cursor), 
        type_(s, clang.getCursorType(cursor)),
     } 
@@ -214,7 +245,6 @@ visit_union_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Union {
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
     output.name = spelling(cursor)
-    // fmt.println(output.name)
     // fmt.println(cursor.kind)
     #partial switch cursor.kind {
         case .CXCursor_FunctionDecl: 

@@ -94,7 +94,7 @@ params_to_s :: proc(ls: []^types.Type, join_on: string) -> string {
 }
 
 type_to_s :: proc (t: ^types.Type) -> string {
-    fmt.println(t)
+    // fmt.println(t)
     #partial switch v in t.variant {
         case types.FieldDecl:
             return field_decl_to_s(v)
