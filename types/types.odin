@@ -36,6 +36,7 @@ Primitive :: struct
 Node_Ref :: struct {
     base: ^Type,
     hash: u32,
+    name: string,
 }
 
 Typedef :: struct

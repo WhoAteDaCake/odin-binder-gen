@@ -101,7 +101,12 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             cursor := clang.getTypeDeclaration(t)
             hash := clang.hashCursor(cursor)
             found := s.cached[hash]
-            output.variant = types.Node_Ref{found,hash}
+            name := spelling(cursor)
+            // if found == nil {
+            //     fmt.println(spelling(cursor))
+            //     name := spelling(cursor)
+            // }
+            output.variant = types.Node_Ref{found,hash, name}
         }
         case: fmt.println(t.kind)
     }

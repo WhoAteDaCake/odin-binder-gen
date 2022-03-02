@@ -58,6 +58,19 @@ handle :: proc(s: ^State, t: ^types.Type) {
 resolve :: proc(ps: ^state.ParserState) -> ^State {
     s := state.layout()
 
+    for _, t in ps.registered {
+        #partial switch v in t.variant {
+            case types.Node_Ref:
+                if v.base == nil {
+                    found := ps.cached[v.hash]
+                    t.variant = types.Node_Ref{found, v.hash, v.name}
+                    if found == nil {
+                        fmt.println(v.name)
+                    }
+                }
+        } 
+    } 
+
     for entry in ps.declared do handle(s, entry)
 
     // fmt.println("----------")
