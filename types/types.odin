@@ -85,6 +85,17 @@ EnumDecl :: struct {
     fields: []^Type,
 }
 
+
+BUILT_INS := map[string]Primitive{
+    "timeval" = Primitive{"timeval", false},
+    "timespec" = Primitive{"_libc.timespec", false},
+    "tm" = Primitive{"_libc.tm", false},
+    "stat" = Primitive{"_os.OS_Stat", false},
+    "va_list" = Primitive{"_libc.va_list", false},
+    "wchar_t" = Primitive{"wchar_t", true},
+    "time_t" = Primitive{"__libc.time_t", false},
+}
+
 primitive_by_name :: proc(name: string) -> Primitive {
     return Primitive{name, true,}
 }

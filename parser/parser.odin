@@ -21,6 +21,15 @@ new_type :: proc(s: ^State) -> ^types.Type {
     return t
 }
 
+// new_type_of_variant :: proc(s: ^State, v: types.TypeVariant) -> ^types.Type {
+//     t := new(types.Type)
+//     t.id = s.id + 1
+//     s.id += 1
+//     s.registered[t.id] = t
+//     t.variant = v
+//     return t
+// }
+
 type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
     output := new_type(s)
     // fmt.println(t.kind, spelling(t))

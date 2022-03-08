@@ -31,6 +31,7 @@ parser :: proc(c: ^config.Config, allocator: ^runtime.Allocator) -> ^ParserState
 LayoutState :: struct {
     defs: [dynamic]^types.Type,
     fns: [dynamic]^types.Type,
+    builtins: map[string]^types.Type,
     id: uint,
 }
 
@@ -38,7 +39,9 @@ layout :: proc() -> ^LayoutState {
     s := new(LayoutState)
     s.defs = make([dynamic]^types.Type)
     s.fns = make([dynamic]^types.Type)
-    s.id = 0
+    s.builtins = make(map[string]^types.Type)
+    // Builtins are id 0
+    s.id = 1
     return s
 }
 

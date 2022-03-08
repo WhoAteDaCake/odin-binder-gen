@@ -18,6 +18,12 @@ pprintf :: proc(using s: ^State, fmt_str: string, args: ..any)
     strings.write_string(buffer, fmt.tprintf(fmt_str, ..args));
 }
 
+pprint :: proc(using s: ^State, value: string,)
+{
+    strings.write_string(buffer, value);
+}
+
+
 print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
     pprintf(s, "%s :: %s --- \n", name(t), func_to_s(t, v))
 }
@@ -47,8 +53,18 @@ print_enum_decl :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
 print_setup :: proc(c: ^config.Config, s: ^State) {
     pprintf(s, "package %s\n\n", c.library)
     pprintf(s, "import _c \"core:c\"\n\n")
+    pprintf(s, "import _os \"core:os\"\n\n")
+    pprintf(s, "import _libc \"core:c/libc\"\n\n")
     pprintf(s, "foreign import %s \"%s\"\n\n", c.library, c.library_path)
-    // pprintf(s, "import _c \"core:c\"\n\n")
+}
+
+print_builtins :: proc(s: ^State) {
+    pprint(s, `
+timeval :: struct {
+	tv_sec: _c.long,
+	tv_usec: _c.long,
+}
+`)
 }
 
 run :: proc (
@@ -57,6 +73,7 @@ run :: proc (
     s: ^State,
 ) {
     print_setup(c, s)
+    print_builtins(s)
 
     for t in l_state.defs {
         #partial switch v in t.variant  {
