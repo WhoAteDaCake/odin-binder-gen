@@ -18,10 +18,16 @@ field_decl_to_s :: proc(v: types.FieldDecl) -> string {
 primitive_to_s :: proc(v: types.Primitive) -> string {
     buffer := strings.make_builder()
 
-    if (v.ctype) {
-        strings.write_string(&buffer, C_PREFIX)
+    if v.type_ in types.BUILT_INS {
+        // fmt.println(types.BUILT_INS[v.type_])
+        // return type_to_s(types.BUILT_INS[v.name])
+        strings.write_string(&buffer, types.BUILT_INS[v.type_].type_)
+    } else {
+        if (v.ctype) {
+            strings.write_string(&buffer, C_PREFIX)
+        }
+        strings.write_string(&buffer, v.type_)
     }
-    strings.write_string(&buffer, v.type_)
     
     return strings.to_string(buffer)
 }
@@ -121,6 +127,7 @@ name_of_type :: proc (t: ^types.Type) -> string {
 }
 
 name_of_string :: proc (name: string) -> string {
+    // if name 
     return name
 }
 

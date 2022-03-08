@@ -92,8 +92,9 @@ BUILT_INS := map[string]Primitive{
     "tm" = Primitive{"_libc.tm", false},
     "stat" = Primitive{"_os.OS_Stat", false},
     "va_list" = Primitive{"_libc.va_list", false},
-    "wchar_t" = Primitive{"wchar_t", true},
-    "time_t" = Primitive{"__libc.time_t", false},
+    "wchar_t" = Primitive{"_c.wchar_t", true},
+    "time_t" = Primitive{"_libc.time_t", false},
+    "FILE" = Primitive{"_libc.FILE", false},
 }
 
 primitive_by_name :: proc(name: string) -> Primitive {

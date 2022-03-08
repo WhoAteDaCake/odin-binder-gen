@@ -35,6 +35,10 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
     // fmt.println(t.kind, spelling(t))
     output.name = spelling(t)
 
+    // if (output.name == "time_t") {
+    //     fmt.println(t.kind)
+    // }
+
     // fmt.println(t.kind)
     #partial switch t.kind {
         case .CXType_ConstantArray: {
@@ -100,9 +104,12 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         case .CXType_Typedef: {
             if types.is_builtin(output.name) {
                 output.variant = types.primitive(output.name)
-            } else {
+            } else if output.name in types.BUILT_INS {
+                output.variant = types.BUILT_INS[output.name]
                 // This will probablybe typedefs within a struct
                 // fmt.println("UNEXPECTED")
+            } else {
+                fmt.println(output.name)
             }
             // // fmt.println(t)
         }
@@ -354,7 +361,15 @@ parse :: proc(c: ^config.Config) -> ^State {
             }
             if matched {
                 append(&s.declared, visit(s, cursor))
-            }
+            } //else {
+                // #partial switch cursor.kind {
+                //     case .CXCursor_FunctionDecl:
+                //         break
+                //     case: 
+                //         fmt.println(spelling(cursor), cursor.kind)
+                // }
+                // fmt.println(spelling(cursor))
+            //}
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
     )
