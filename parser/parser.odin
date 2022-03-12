@@ -109,7 +109,7 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
                 // This will probablybe typedefs within a struct
                 // fmt.println("UNEXPECTED")
             } else {
-                fmt.println(output.name)
+                // fmt.println(output.name)
             }
             // // fmt.println(t)
         }
@@ -118,14 +118,20 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             hash := clang.hashCursor(cursor)
             found := s.cached[hash]
             name := spelling(cursor)
-            // if found == nil {
-            //     fmt.println(spelling(cursor))
+            // TODO: redo to move builtin types here, since
+            // typedef and elaborated both use it.
+            if found == nil && name in types.BUILT_INS{
+                // found = 
+                // fmt.println(name)
             //     name := spelling(cursor)
-            // }
+            } else {
+                fmt.println(name)
+            }
             output.variant = types.Node_Ref{found,hash, name}
         }
         case: fmt.println(t.kind)
     }
+    fmt.println(output)
     return output
 }
 
@@ -161,6 +167,10 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
     
     pending := s.pending
     s.pending = make([dynamic]^types.Type)
+
+    if (spelling(cursor) == "_PyTime_FromTimeval") {
+        fmt.println(spelling(cursor))
+    }
 
     // Parse internal arguments
     visit_children(
@@ -292,6 +302,14 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     return output
 }
 
+add_builtins :: proc(s: ^State) {
+    for k, v in types.BUILT_INS {
+        t := new_type(s)
+        t.variant = v
+        s.builtins[k] = t 
+    }
+}
+
 parse :: proc(c: ^config.Config) -> ^State {
     idx := clang.createIndex(0, 1);
     defer clang.disposeIndex(idx)
@@ -342,6 +360,8 @@ parse :: proc(c: ^config.Config) -> ^State {
     
     default_allocator: = context.allocator
     state := state.parser(c, &default_allocator)
+
+    add_builtins(state)
     // Should be done from state package
     // defer delete(state.cached)
     // defer delete(state.pending)
