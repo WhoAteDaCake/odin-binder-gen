@@ -1,3 +1,5 @@
+// int _PyTime_FromTimeval(int item, struct timeval *tv);
+
 #include "python3.8/Python.h"
   
 

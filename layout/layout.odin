@@ -55,44 +55,21 @@ handle :: proc(s: ^State, t: ^types.Type) {
     // fmt.println(t)
 }
 
-// type_of_variant :: proc(id: u32, name: string, v: types.TypeVariant) -> ^types.Type {
-//     t := new(types.Type)
-//     t.name = ""
-//     t.id  = id
-//     t.variant = v
-//     return t
-// }
-
-// add_builtins :: proc(s: ^State) {
-//     for k, v in types.BUILT_INS {
-//         s.builtins[k] = type_of_variant(0, k, v)
-//     }
-// }
-
 resolve :: proc(ps: ^state.ParserState) -> ^State {
     s := state.layout()
 
-    // add_builtins(s)
-
-    // for _, t in ps.registered {
-    //     #partial switch v in t.variant {
-    //         case types.Node_Ref:
-    //             if v.base == nil {
-    //                 found := ps.cached[v.hash]
-    //                 if found == nil {
-    //                     if v.name in s.builtins {
-    //                         found = s.builtins[v.name]
-    //                     }
-    //                     if found == nil {
-    //                        fmt.println(v.name) 
-    //                     }
-    //                     // s.builtin[k]
-    //                     // fmt.println(v.name)
-    //                 }
-    //                 t.variant = types.Node_Ref{found, v.hash, v.name}
-    //             }
-    //     } 
-    // } 
+    for _, t in ps.registered {
+        #partial switch v in t.variant {
+            case types.Node_Ref:
+                if v.base == nil {
+                    found := ps.cached[v.hash]
+                    if found == nil {
+                        fmt.println("WARNING: Missing ", v.name)
+                    }
+                    t.variant = types.Node_Ref{found, v.hash, v.name}
+                }
+        } 
+    } 
 
     for entry in ps.declared do handle(s, entry)
 

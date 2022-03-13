@@ -120,18 +120,17 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             name := spelling(cursor)
             // TODO: redo to move builtin types here, since
             // typedef and elaborated both use it.
-            if found == nil && name in types.BUILT_INS{
-                // found = 
-                // fmt.println(name)
-            //     name := spelling(cursor)
+            if found == nil && name in types.BUILT_INS {
+                found = s.builtins[name]
             } else {
-                fmt.println(name)
+                // fmt.println("missing", name)
             }
+            // fmt.println(name, found)
             output.variant = types.Node_Ref{found,hash, name}
         }
-        case: fmt.println(t.kind)
+        // case: fmt.println(t.kind)
     }
-    fmt.println(output)
+    // fmt.println(output)
     return output
 }
 
@@ -168,9 +167,9 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
     pending := s.pending
     s.pending = make([dynamic]^types.Type)
 
-    if (spelling(cursor) == "_PyTime_FromTimeval") {
-        fmt.println(spelling(cursor))
-    }
+    // if (spelling(cursor) == "_PyTime_FromTimeval") {
+    //     fmt.println(spelling(cursor))
+    // }
 
     // Parse internal arguments
     visit_children(
@@ -305,6 +304,7 @@ visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
 add_builtins :: proc(s: ^State) {
     for k, v in types.BUILT_INS {
         t := new_type(s)
+        t.name = k
         t.variant = v
         s.builtins[k] = t 
     }
