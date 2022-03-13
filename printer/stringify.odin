@@ -53,7 +53,7 @@ array_to_s :: proc(t: ^types.Type, v: types.Array) -> string {
 }
 
 func_to_s :: proc(t: ^types.Type, v: types.Func) -> string {
-    param_l := params_to_s(v.params, ", ")
+    param_l := params_to_s(v.params, ", ", true)
     defer delete(param_l)
 
     ret := ""
@@ -72,7 +72,7 @@ func_to_s :: proc(t: ^types.Type, v: types.Func) -> string {
 }
 
 
-params_to_s :: proc(ls: []^types.Type, join_on: string) -> string {
+params_to_s :: proc(ls: []^types.Type, join_on: string, needs_name: bool) -> string {
     params := make([]string, len(ls))
     defer {
         for param in params do delete(param)
@@ -80,10 +80,13 @@ params_to_s :: proc(ls: []^types.Type, join_on: string) -> string {
     }
     
     for param, index in ls {
+        // fmt.println(param.variant)
         // Is this always field_decl_to_s ?
         #partial switch v in param.variant {
             case types.FieldDecl:
                 params[index] = field_decl_to_s(v)
+            case types.EnumValue:
+                params[index] = enum_to_s(param, v)
             case:
                 // Unnamed
                 t := types.FieldDecl{

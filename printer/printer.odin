@@ -29,7 +29,7 @@ print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
 }
 
 print_struct_decl :: proc(s: ^State, t: ^types.Type, meta: string, fields: []^types.Type) {
-    param_l := params_to_s(fields, ",\n")
+    param_l := params_to_s(fields, ",\n", true)
     defer delete(param_l)
 
     pprintf(s, "%s :: struct %s {{\n", name(t), meta)
@@ -42,7 +42,7 @@ print_typedef_decl :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
 } 
 
 print_enum_decl :: proc(s: ^State, t: ^types.Type, v: types.EnumDecl) {
-    param_l := params_to_s(v.fields, ",\n")
+    param_l := params_to_s(v.fields, ",\n", false)
     defer delete(param_l)
 
     pprintf(s, "%s :: enum %s {{\n", name(t), type_to_s(v.type_))
