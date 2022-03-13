@@ -47,10 +47,12 @@ layout :: proc() -> ^LayoutState {
 
 PrinterState :: struct {
     buffer: ^strings.Builder,
+    id: uint,
 }
 
 printer :: proc(buffer: ^strings.Builder) -> ^PrinterState {
     s := new(PrinterState)
     s.buffer = buffer
+    s.id = 0
     return s
 }

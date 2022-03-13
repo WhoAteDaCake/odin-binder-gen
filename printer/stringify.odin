@@ -12,7 +12,12 @@ import "core:strings"
 C_PREFIX :: string("_c.")
 
 field_decl_to_s :: proc(v: types.FieldDecl) -> string {
-    return fmt.aprintf("%s: %s", name(v.name), type_to_s(v.type_))
+    // fmt.println(v)
+    n := name(v.name)
+    if len(n) == 0 {
+        n = "_"
+    }
+    return fmt.aprintf("%s: %s", n, type_to_s(v.type_))
 }
 
 primitive_to_s :: proc(v: types.Primitive) -> string {
