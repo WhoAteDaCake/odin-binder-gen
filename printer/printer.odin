@@ -29,6 +29,10 @@ print_func_decl :: proc(s: ^State, t: ^types.Type, v: types.Func) {
 }
 
 print_struct_decl :: proc(s: ^State, t: ^types.Type, meta: string, fields: []^types.Type) {
+    if len(fields) == 0 {
+        return
+    }
+
     param_l := params_to_s(fields, ",\n", true)
     defer delete(param_l)
 
