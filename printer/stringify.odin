@@ -19,7 +19,6 @@ primitive_to_s :: proc(v: types.Primitive) -> string {
     buffer := strings.make_builder()
 
     if v.type_ in types.BUILT_INS {
-        // fmt.println(types.BUILT_INS[v.type_])
         // return type_to_s(types.BUILT_INS[v.name])
         strings.write_string(&buffer, types.BUILT_INS[v.type_].type_)
     } else {
@@ -80,7 +79,6 @@ params_to_s :: proc(ls: []^types.Type, join_on: string, needs_name: bool) -> str
     }
     
     for param, index in ls {
-        // fmt.println(param.variant)
         // Is this always field_decl_to_s ?
         #partial switch v in param.variant {
             case types.FieldDecl:
@@ -94,8 +92,6 @@ params_to_s :: proc(ls: []^types.Type, join_on: string, needs_name: bool) -> str
                     param,
                 }
                 params[index] = field_decl_to_s(t)
-                // fmt.println(param.variant)
-                // fmt.println("Unexpected field")
         }
     }
 
@@ -103,7 +99,6 @@ params_to_s :: proc(ls: []^types.Type, join_on: string, needs_name: bool) -> str
 }
 
 type_to_s :: proc (t: ^types.Type) -> string {
-    // fmt.println(t)
     #partial switch v in t.variant {
         case types.FieldDecl:
             return field_decl_to_s(v)

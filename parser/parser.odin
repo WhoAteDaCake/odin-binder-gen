@@ -32,14 +32,8 @@ new_type :: proc(s: ^State) -> ^types.Type {
 
 type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
     output := new_type(s)
-    // fmt.println(t.kind, spelling(t))
     output.name = spelling(t)
 
-    // if (output.name == "time_t") {
-    //     fmt.println(t.kind)
-    // }
-
-    // fmt.println(t.kind)
     #partial switch t.kind {
         case .CXType_ConstantArray: {
             output.variant = types.Array{
@@ -59,10 +53,15 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
         // Check if I need to handle special case for function pointers
         case .CXType_Pointer: {
             pointee := clang.getPointeeType(t)
-            // fmt.println(spelling(t))
+            value := type_(s, pointee)
+            is_const := clang.isConstQualifiedType(pointee) == 1
+            // We don't care about any other const rather than char
+            if !strings.contains(value.name, "const char") {
+                is_const = false
+            }
             output.variant = types.Pointer{
-                type_(s, pointee),
-                clang.isConstQualifiedType(pointee) == 1,
+                value,
+                is_const,
             }
         }
         case .CXType_Bool: {
@@ -108,10 +107,7 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
                 output.variant = types.BUILT_INS[output.name]
                 // This will probablybe typedefs within a struct
                 // fmt.println("UNEXPECTED")
-            } else {
-                // fmt.println(output.name)
             }
-            // // fmt.println(t)
         }
         case .CXType_Elaborated: {
             cursor := clang.getTypeDeclaration(t)
@@ -122,15 +118,10 @@ type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
             // typedef and elaborated both use it.
             if found == nil && name in types.BUILT_INS {
                 found = s.builtins[name]
-            } else {
-                // fmt.println("missing", name)
             }
-            // fmt.println(name, found)
             output.variant = types.Node_Ref{found,hash, name}
         }
-        // case: fmt.println(t.kind)
     }
-    // fmt.println(output)
     return output
 }
 
@@ -141,9 +132,6 @@ build_function_type :: proc(s: ^State, t: clang.CXType) -> types.Func {
     if len(params) > 0 {
         for i in 0..(n - 1) {
             at := clang.getArgType(t, i)
-            // print()
-            // cursor := clang.getTypeDeclaration(t)
-            // fmt.println(cursor_spelling(cursor))
             params[i] = type_(s, at)
         }
     }
@@ -153,7 +141,6 @@ build_function_type :: proc(s: ^State, t: clang.CXType) -> types.Func {
 visit_typedef :: proc(s: ^State, cursor: clang.CXCursor) -> types.Typedef {
     t := clang.getTypedefDeclUnderlyingType(cursor)
     base := type_(s, t)
-    // fmt.println(base)
     // ^ Will this always return a NodeRef? Could be optimised 
     // Maybe is a primitive sometimes
     name := spelling(t)
@@ -166,10 +153,6 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
     
     pending := s.pending
     s.pending = make([dynamic]^types.Type)
-
-    // if (spelling(cursor) == "_PyTime_FromTimeval") {
-    //     fmt.println(spelling(cursor))
-    // }
 
     // Parse internal arguments
     visit_children(
@@ -194,7 +177,6 @@ visit_function_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Func {
 }
 
 visit_param_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.FieldDecl {
-//    fmt.println("Field: %s", spelling(cursor))
     return types.FieldDecl{
        spelling(cursor), 
        type_(s, clang.getCursorType(cursor)),
@@ -275,7 +257,6 @@ visit_union_decl :: proc(s: ^State, cursor: clang.CXCursor) -> types.Union {
 visit :: proc (s: ^State, cursor: clang.CXCursor) ->^types.Type {
     output := new_type(s)
     output.name = spelling(cursor)
-    // fmt.println(cursor.kind)
     #partial switch cursor.kind {
         case .CXCursor_FunctionDecl: 
             output.variant = visit_function_decl(s, cursor)
@@ -350,10 +331,9 @@ parse :: proc(c: ^config.Config) -> ^State {
     );
 
     if err != nil {
-        // fmt.println(err)
+        fmt.println("Error: ", err)
     }
     if tu == nil {
-        // fmt.println("Failed to configure translation unit")
         os.exit(1)
     }
     cursor := clang.getTranslationUnitCursor(tu)
@@ -381,15 +361,7 @@ parse :: proc(c: ^config.Config) -> ^State {
             }
             if matched {
                 append(&s.declared, visit(s, cursor))
-            } //else {
-                // #partial switch cursor.kind {
-                //     case .CXCursor_FunctionDecl:
-                //         break
-                //     case: 
-                //         fmt.println(spelling(cursor), cursor.kind)
-                // }
-                // fmt.println(spelling(cursor))
-            //}
+            }
             return clang.CXChildVisitResult.CXChildVisit_Continue;
         },
     )

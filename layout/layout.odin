@@ -27,7 +27,6 @@ handle_typedef :: proc(s: ^State, t: ^types.Type, v: types.Typedef) {
         // }
         t.variant = types.Typedef{name, v.base}
     }
-    // fmt.println(v.base)
     append(&s.defs, t)
 }
 
@@ -52,7 +51,6 @@ handle :: proc(s: ^State, t: ^types.Type) {
         case types.Union:
             handle_struct(s, t, v.fields)
     }
-    // fmt.println(t)
 }
 
 resolve :: proc(ps: ^state.ParserState) -> ^State {
