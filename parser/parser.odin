@@ -32,7 +32,13 @@ new_type :: proc(s: ^State) -> ^types.Type {
 
 type_ :: proc(s: ^State, t: clang.CXType) -> ^types.Type {
     output := new_type(s)
-    output.name = spelling(t)
+    name := spelling(t)
+
+    if strings.contains(name, "const ") {
+        name, _ = strings.remove(name, "const ", 1)
+    }
+
+    output.name = name
 
     #partial switch t.kind {
         case .CXType_ConstantArray: {
